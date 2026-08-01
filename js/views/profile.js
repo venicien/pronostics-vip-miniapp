@@ -76,6 +76,6 @@ export async function renderProfile(container) {
           .join('')
       : `<div class="empty-state">Aucune transaction pour le moment.</div>`;
   } catch (e) {
-    content.innerHTML = `<div class="empty-state">Impossible de charger ton profil.</div>`;
+    content.innerHTML = `<div class="empty-state">Impossible de charger ton profil.<br><span style="font-size:11px;opacity:0.6;">${e.message}</span></div>`;
   }
 }
