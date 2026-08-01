@@ -1,0 +1,54 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Politique de Confidentialité</title>
+<style>
+  body { background:#0b1a14; color:#f2efe6; font-family:Inter,sans-serif; padding:24px; line-height:1.6; max-width:600px; margin:0 auto; }
+  h1,h2 { font-family:Oswald,sans-serif; color:#e4b348; }
+  .warning { background:#182f24; border:1px solid #e4b348; border-radius:10px; padding:14px; font-size:13px; margin-bottom:24px; }
+  table { width:100%; border-collapse:collapse; font-size:13px; }
+  td, th { border:1px solid #22392e; padding:6px 8px; text-align:left; }
+</style>
+</head>
+<body>
+
+<div class="warning">
+  ⚠️ Modèle générique à faire valider par un juriste. Si tes utilisateurs incluent
+  des résidents de l'UE/UK, des obligations RGPD spécifiques s'appliquent
+  (base légale, durée de conservation précise, droits d'accès formalisés, etc.)
+  qu'un professionnel doit vérifier avec toi.
+</div>
+
+<h1>Politique de Confidentialité</h1>
+
+<h2>Données collectées</h2>
+<table>
+  <tr><th>Donnée</th><th>Origine</th><th>Finalité</th></tr>
+  <tr><td>telegram_id, username, prénom</td><td>Telegram (automatique à l'usage du bot)</td><td>Identification du compte</td></tr>
+  <tr><td>Historique de paiement</td><td>Providers de paiement</td><td>Activation VIP, comptabilité</td></tr>
+  <tr><td>Numéro Mobile Money / ID transaction</td><td>Saisie utilisateur</td><td>Validation manuelle du paiement</td></tr>
+  <tr><td>Solde et historique du portefeuille</td><td>Système de parrainage</td><td>Gestion des commissions</td></tr>
+</table>
+
+<h2>Conservation</h2>
+<p>Les données sont conservées tant que le compte est actif, puis [DÉLAI À DÉFINIR] après la dernière activité.</p>
+
+<h2>Partage des données</h2>
+<p>
+  Aucune donnée n'est vendue à des tiers. Certaines données transitent par les
+  prestataires techniques suivants dans le cadre strict du service :
+  Supabase (hébergement base de données), Render (serveur applicatif),
+  Vercel (Mini App), et les providers de paiement choisis par l'utilisateur
+  (NOWPayments, Cryptomus, Wallet Pay, PayPal).
+</p>
+
+<h2>Droits de l'utilisateur</h2>
+<p>Tout utilisateur peut demander l'accès, la rectification ou la suppression de ses données en contactant [CONTACT SUPPORT].</p>
+
+<h2>Sécurité</h2>
+<p>L'accès aux données est restreint techniquement (RLS Supabase, clé de service backend uniquement) — voir détails techniques disponibles sur demande.</p>
+
+</body>
+</html>

@@ -1,0 +1,395 @@
+/* ===================================================================
+   DESIGN TOKENS
+   =================================================================== */
+:root {
+  --bg: #0b1a14;
+  --surface: #12241c;
+  --surface-raised: #182f24;
+  --border: #22392e;
+  --gold: #e4b348;
+  --gold-dim: #a8863a;
+  --green: #3fa34d;
+  --red: #d64545;
+  --text: #f2efe6;
+  --text-muted: #8fa79a;
+
+  --font-display: 'Oswald', sans-serif;
+  --font-body: 'Inter', sans-serif;
+  --font-mono: 'IBM Plex Mono', monospace;
+
+  --radius: 14px;
+  --safe-bottom: env(safe-area-inset-bottom, 0px);
+}
+
+* { box-sizing: border-box; }
+
+html, body {
+  margin: 0;
+  padding: 0;
+  background: var(--bg);
+  color: var(--text);
+  font-family: var(--font-body);
+  -webkit-tap-highlight-color: transparent;
+}
+
+body {
+  padding-bottom: calc(64px + var(--safe-bottom));
+}
+
+h1, h2, h3, .display {
+  font-family: var(--font-display);
+  text-transform: uppercase;
+  letter-spacing: 0.02em;
+  font-weight: 600;
+  margin: 0;
+}
+
+.mono { font-family: var(--font-mono); font-variant-numeric: tabular-nums; }
+
+a { color: inherit; text-decoration: none; }
+
+button {
+  font-family: var(--font-body);
+  cursor: pointer;
+  border: none;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  * { animation: none !important; transition: none !important; }
+}
+
+/* ===================================================================
+   LAYOUT
+   =================================================================== */
+#app {
+  max-width: 480px;
+  margin: 0 auto;
+  min-height: 100vh;
+  position: relative;
+}
+
+.topbar {
+  position: sticky;
+  top: 0;
+  z-index: 10;
+  background: linear-gradient(180deg, var(--bg) 70%, rgba(11, 26, 20, 0));
+  padding: 16px 16px 8px;
+}
+
+.topbar .eyebrow {
+  color: var(--gold);
+  font-size: 12px;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  font-family: var(--font-mono);
+}
+
+.topbar h1 { font-size: 22px; margin-top: 2px; }
+
+.view { padding: 8px 16px 24px; }
+
+/* Bannière flash d'urgence */
+.banner-flash {
+  background: var(--gold);
+  color: #1a1305;
+  font-family: var(--font-mono);
+  font-size: 13px;
+  font-weight: 600;
+  padding: 8px 16px;
+  text-align: center;
+}
+
+/* ===================================================================
+   NAVIGATION BASSE
+   =================================================================== */
+.bottom-nav {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  max-width: 480px;
+  margin: 0 auto;
+  background: var(--surface);
+  border-top: 1px solid var(--border);
+  display: flex;
+  padding-bottom: var(--safe-bottom);
+  z-index: 20;
+}
+
+.bottom-nav button {
+  flex: 1;
+  background: transparent;
+  color: var(--text-muted);
+  font-size: 11px;
+  padding: 10px 0 8px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  letter-spacing: 0.03em;
+  text-transform: uppercase;
+  font-family: var(--font-mono);
+}
+
+.bottom-nav button svg { width: 20px; height: 20px; }
+
+.bottom-nav button.active { color: var(--gold); }
+
+/* ===================================================================
+   COMPOSANT SIGNATURE : TICKET À SOUCHE
+   =================================================================== */
+.ticket {
+  position: relative;
+  background: var(--surface-raised);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  margin-bottom: 16px;
+  overflow: hidden;
+}
+
+.ticket__body {
+  padding: 16px 16px 14px;
+}
+
+.ticket__label {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  color: var(--gold);
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  margin-bottom: 6px;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.ticket__match {
+  font-family: var(--font-display);
+  font-size: 19px;
+  margin-bottom: 8px;
+  line-height: 1.2;
+}
+
+.ticket__analyse {
+  color: var(--text-muted);
+  font-size: 13.5px;
+  line-height: 1.5;
+}
+
+/* ligne de déchirure perforée */
+.ticket__tear {
+  position: relative;
+  height: 0;
+  border-top: 2px dashed var(--border);
+  margin: 0 0;
+}
+
+.ticket__tear::before,
+.ticket__tear::after {
+  content: '';
+  position: absolute;
+  top: -9px;
+  width: 18px;
+  height: 18px;
+  background: var(--bg);
+  border-radius: 50%;
+}
+.ticket__tear::before { left: -25px; }
+.ticket__tear::after { right: -25px; }
+
+.ticket__stub {
+  padding: 12px 16px 16px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.ticket__cote-block { display: flex; flex-direction: column; }
+.ticket__cote-label { font-size: 10px; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.08em; }
+.ticket__cote { font-family: var(--font-mono); font-size: 26px; color: var(--gold); font-weight: 600; }
+
+.confidence { display: flex; gap: 3px; }
+.confidence__pip {
+  width: 8px; height: 8px; border-radius: 50%;
+  background: var(--border);
+}
+.confidence__pip.filled { background: var(--gold); }
+
+.ticket__result-badge {
+  font-family: var(--font-mono);
+  font-size: 12px;
+  font-weight: 600;
+  padding: 4px 10px;
+  border-radius: 999px;
+}
+.ticket__result-badge.valide { background: rgba(63,163,77,0.15); color: var(--green); }
+.ticket__result-badge.perdu { background: rgba(214,69,69,0.15); color: var(--red); }
+.ticket__result-badge.attente { background: rgba(143,167,154,0.15); color: var(--text-muted); }
+
+.ticket__cta {
+  display: block;
+  margin: 0 16px 16px;
+  background: var(--gold);
+  color: #1a1305;
+  text-align: center;
+  padding: 10px;
+  border-radius: 10px;
+  font-family: var(--font-mono);
+  font-size: 13px;
+  font-weight: 700;
+  letter-spacing: 0.03em;
+}
+
+/* ===================================================================
+   PASS VIP
+   =================================================================== */
+.pass-card {
+  background: var(--surface-raised);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 16px;
+  margin-bottom: 12px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+.pass-card.featured { border-color: var(--gold); box-shadow: 0 0 0 1px var(--gold) inset; }
+.pass-card__name { font-family: var(--font-display); font-size: 16px; }
+.pass-card__duration { font-size: 12px; color: var(--text-muted); margin-top: 2px; }
+.pass-card__price { font-family: var(--font-mono); font-size: 18px; color: var(--gold); font-weight: 600; }
+
+.btn-primary {
+  background: var(--gold);
+  color: #1a1305;
+  border-radius: 10px;
+  padding: 12px 16px;
+  font-weight: 700;
+  font-size: 14px;
+  width: 100%;
+  font-family: var(--font-mono);
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+}
+
+.btn-secondary {
+  background: transparent;
+  border: 1px solid var(--border);
+  color: var(--text);
+  border-radius: 10px;
+  padding: 10px 14px;
+  font-size: 13px;
+}
+
+.payment-method {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 14px;
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  margin-bottom: 10px;
+  background: var(--surface);
+}
+.payment-method__name { font-size: 14px; }
+.payment-method__sub { font-size: 11px; color: var(--text-muted); }
+
+/* ===================================================================
+   WALLET / PARRAINAGE
+   =================================================================== */
+.wallet-hero {
+  background: linear-gradient(135deg, var(--surface-raised), var(--surface));
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 20px;
+  text-align: center;
+  margin-bottom: 16px;
+}
+.wallet-hero__label { font-size: 12px; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.08em; }
+.wallet-hero__amount { font-family: var(--font-mono); font-size: 34px; color: var(--gold); margin-top: 4px; }
+
+.referral-link-box {
+  background: var(--surface);
+  border: 1px dashed var(--gold-dim);
+  border-radius: 10px;
+  padding: 12px;
+  font-family: var(--font-mono);
+  font-size: 12px;
+  color: var(--text-muted);
+  word-break: break-all;
+  margin-bottom: 12px;
+}
+
+/* ===================================================================
+   BANKROLL CALCULATOR
+   =================================================================== */
+.calc-box {
+  background: var(--surface-raised);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 16px;
+  margin-bottom: 16px;
+}
+.calc-box input[type="number"] {
+  width: 100%;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  color: var(--text);
+  border-radius: 8px;
+  padding: 10px 12px;
+  font-family: var(--font-mono);
+  font-size: 15px;
+  margin-top: 6px;
+}
+.calc-box label { font-size: 12px; color: var(--text-muted); }
+.calc-result {
+  margin-top: 12px;
+  font-family: var(--font-mono);
+  font-size: 15px;
+  color: var(--green);
+}
+
+.bookmaker-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 12px 0;
+  border-bottom: 1px solid var(--border);
+}
+.bookmaker-row__name { font-size: 14px; }
+.promo-copy {
+  font-family: var(--font-mono);
+  font-size: 12px;
+  color: var(--gold);
+  border: 1px solid var(--gold-dim);
+  border-radius: 6px;
+  padding: 4px 8px;
+}
+
+.section-title {
+  font-size: 13px;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  margin: 20px 0 10px;
+  font-family: var(--font-mono);
+}
+
+.empty-state {
+  text-align: center;
+  padding: 40px 20px;
+  color: var(--text-muted);
+  font-size: 14px;
+}
+
+.skeleton {
+  background: linear-gradient(90deg, var(--surface) 25%, var(--surface-raised) 50%, var(--surface) 75%);
+  background-size: 200% 100%;
+  animation: shimmer 1.4s infinite;
+  border-radius: var(--radius);
+  height: 100px;
+  margin-bottom: 16px;
+}
+@keyframes shimmer {
+  0% { background-position: 200% 0; }
+  100% { background-position: -200% 0; }
+}

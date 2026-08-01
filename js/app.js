@@ -1,0 +1,94 @@
+import { renderHome } from './views/home.js';
+import { renderVip } from './views/vip.js';
+import { renderBonus } from './views/bonus.js';
+import { renderProfile } from './views/profile.js';
+import { api } from './api.js';
+
+const routes = {
+  home: { render: renderHome, label: 'Accueil', icon: '🎟️' },
+  vip: { render: renderVip, label: 'VIP', icon: '⭐' },
+  bonus: { render: renderBonus, label: 'Bonus', icon: '🎁' },
+  profile: { render: renderProfile, label: 'Profil', icon: '👤' },
+};
+
+function initTelegram() {
+  const tg = window.Telegram?.WebApp;
+  if (!tg) return;
+  tg.ready();
+  tg.expand();
+  document.documentElement.style.setProperty('--tg-viewport-height', `${tg.viewportHeight}px`);
+}
+
+async function mountBrandHeader(root) {
+  try {
+    const { settings } = await api.getSettings();
+    const logoUrl = settings?.logo_url;
+    if (logoUrl) {
+      const header = document.createElement('div');
+      header.style.cssText = 'display:flex;justify-content:center;padding:10px 0 0;';
+      header.innerHTML = `<img src="${logoUrl}" alt="Logo" style="height:32px;" />`;
+      root.prepend(header);
+    }
+  } catch (e) {
+    // pas bloquant si les réglages ne chargent pas
+  }
+}
+
+async function mountBanner(root) {
+  try {
+    const { banner } = await api.getActiveBanner();
+    if (banner?.is_active) {
+      const el = document.createElement('div');
+      el.className = 'banner-flash';
+      el.textContent = banner.message;
+      root.prepend(el);
+    }
+  } catch (e) {
+    // pas bloquant si la bannière ne charge pas
+  }
+}
+
+function mountNav(root, activeRoute, viewContainer) {
+  const nav = document.createElement('nav');
+  nav.className = 'bottom-nav';
+  nav.innerHTML = Object.entries(routes)
+    .map(
+      ([key, r]) => `
+      <button data-route="${key}" class="${key === activeRoute ? 'active' : ''}">
+        <span aria-hidden="true">${r.icon}</span>
+        <span>${r.label}</span>
+      </button>`
+    )
+    .join('');
+
+  nav.querySelectorAll('button').forEach((btn) => {
+    btn.addEventListener('click', () => navigate(btn.dataset.route, root, viewContainer));
+  });
+
+  const existing = root.querySelector('.bottom-nav');
+  if (existing) existing.remove();
+  root.appendChild(nav);
+}
+
+function navigate(routeKey, root, viewContainer) {
+  window.location.hash = routeKey;
+  routes[routeKey].render(viewContainer);
+  mountNav(root, routeKey, viewContainer);
+}
+
+function boot() {
+  initTelegram();
+
+  const root = document.getElementById('app');
+  const viewContainer = document.createElement('div');
+  viewContainer.id = 'view-container';
+  root.appendChild(viewContainer);
+
+  mountBrandHeader(root);
+  mountBanner(root);
+
+  const initialRoute = window.location.hash.replace('#', '') || 'home';
+  navigate(routes[initialRoute] ? initialRoute : 'home', root, viewContainer);
+}
+
+document.addEventListener('DOMContentLoaded', boot);
