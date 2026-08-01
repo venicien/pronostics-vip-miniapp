@@ -16,7 +16,7 @@ async function request(path, { method = 'GET', body, auth = true } = {}) {
   });
 
   const data = await res.json().catch(() => ({}));
-  if (!res.ok) throw new Error(data.error || `Erreur ${res.status}`);
+  if (!res.ok) throw new Error(data.details ? `${data.error} — ${data.details}` : data.error || `Erreur ${res.status}`);
   return data;
 }
 
