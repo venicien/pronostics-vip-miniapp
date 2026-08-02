@@ -22,7 +22,7 @@ async function request(path, { method = 'GET', body, auth = true } = {}) {
 
 export const api = {
   getMe: () => request('/api/users/me'),
-  getWalletTransactions: () => request('/api/users/me/wallet/transactions'),
+  getWalletTransactions: () => request('/api/users/wallet/transactions'),
 
   getContent: (type) => request(`/api/content${type ? `?type=${type}` : ''}`, { auth: false }),
 
