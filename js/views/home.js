@@ -1,4 +1,5 @@
 import { api } from '../api.js';
+import { openLightbox } from '../lightbox.js';
 
 function confidenceDots(level = 0) {
   return Array.from({ length: 5 })
@@ -33,9 +34,9 @@ function ticketImage(item) {
 
 function renderPronosticTicket(item) {
   return `
-    <div class="ticket">
+    <div class="ticket" data-id="${item.id}">
       ${ticketImage(item)}
-      <div class="ticket__body">
+      <div class="ticket__body ticket__body--clickable">
         <div class="ticket__label">
           <span>🎟️ Pronostic${item.type === 'pronostic_combine' ? ' combiné' : ''}</span>
           <span class="ticket__date">${formatPublishedDate(item.published_at)}</span>
@@ -57,9 +58,9 @@ function renderPronosticTicket(item) {
 
 function renderBilanTicket(item) {
   return `
-    <div class="ticket">
+    <div class="ticket" data-id="${item.id}">
       ${ticketImage(item)}
-      <div class="ticket__body">
+      <div class="ticket__body ticket__body--clickable">
         <div class="ticket__label">
           <span>📊 Bilan</span>
           <span class="ticket__date">${formatPublishedDate(item.published_at)}</span>
@@ -130,6 +131,18 @@ export async function renderHome(container) {
     const sorted = [...allItems].sort((a, b) => new Date(b.published_at) - new Date(a.published_at));
     feed.innerHTML = renderList(sorted.filter((item) => matchesFilter(item, activeFilter)));
   }
+
+  feed.addEventListener('click', (e) => {
+    const ticketEl = e.target.closest('.ticket');
+    if (!ticketEl) return;
+    const item = allItems.find((i) => i.id === ticketEl.dataset.id);
+    if (!item) return;
+    openLightbox({
+      imageUrl: item.image_url,
+      title: item.match_label || item.title,
+      caption: item.type === 'bilan' ? item.body : item.analyse,
+    });
+  });
 
   filterBar.addEventListener('click', (e) => {
     const btn = e.target.closest('.filter-tab');
