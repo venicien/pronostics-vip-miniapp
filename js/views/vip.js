@@ -108,24 +108,51 @@ async function handleMethodClick(content, method, passId, promoCode) {
   const detail = content.querySelector('#method-detail');
 
   if (method === 'mobile_money') {
+    detail.innerHTML = `<div class="empty-state">Chargement…</div>`;
+
+    let mmAccounts = {};
+    try {
+      const { settings } = await api.getSettings();
+      mmAccounts = JSON.parse(settings.mobile_money_accounts || '{}');
+    } catch (e) {
+      mmAccounts = {};
+    }
+
+    const operators = ['Orange Money', 'MTN Mobile Money', 'Wave', 'Moov Money'];
+    const renderAccountBox = (operator) => {
+      const account = mmAccounts[operator];
+      return account
+        ? `<div class="calc-box" style="border-color:var(--gold);"><label>Envoie le montant exact à :</label><div class="mono" style="font-size:16px;color:var(--gold);margin-top:4px;">${account}</div></div>`
+        : `<div class="empty-state" style="font-size:12px;">Numéro non configuré pour cet opérateur, contacte le support.</div>`;
+    };
+
     detail.innerHTML = `
       <div class="calc-box">
         <label>Opérateur</label>
         <select id="mm-operator" style="width:100%;margin-top:6px;padding:10px;border-radius:8px;background:var(--surface);color:var(--text);border:1px solid var(--border);">
-          <option>Orange Money</option>
-          <option>MTN Mobile Money</option>
-          <option>Wave</option>
-          <option>Moov Money</option>
+          ${operators.map((op) => `<option value="${op}">${op}</option>`).join('')}
         </select>
-        <label style="display:block;margin-top:12px;">Numéro utilisé pour le dépôt ou ID de transaction</label>
-        <input type="text" id="mm-txid" placeholder="Ex: 07 00 00 00 00 ou ID transaction" />
+      </div>
+      <div id="mm-account-box">${renderAccountBox(operators[0])}</div>
+      <div class="calc-box">
+        <label>Ton numéro (celui qui a servi à envoyer l'argent)</label>
+        <input type="text" id="mm-txid" placeholder="Ex : 07 00 00 00 00" />
+        <label style="display:block;margin-top:10px;">ID de transaction (si ton opérateur en fournit un)</label>
+        <input type="text" id="mm-ref" placeholder="Optionnel" />
         <button class="btn-primary" id="mm-submit" style="margin-top:14px;">Envoyer pour validation</button>
       </div>
     `;
+
+    detail.querySelector('#mm-operator').addEventListener('change', (e) => {
+      detail.querySelector('#mm-account-box').innerHTML = renderAccountBox(e.target.value);
+    });
+
     detail.querySelector('#mm-submit').addEventListener('click', async () => {
       const operator = detail.querySelector('#mm-operator').value;
-      const phoneOrTxId = detail.querySelector('#mm-txid').value.trim();
-      if (!phoneOrTxId) return;
+      const phone = detail.querySelector('#mm-txid').value.trim();
+      const ref = detail.querySelector('#mm-ref').value.trim();
+      if (!phone) return;
+      const phoneOrTxId = ref ? `${phone} (réf. ${ref})` : phone;
       try {
         await api.submitMobileMoney({ passId, operator, phoneOrTxId, promoCode });
         detail.innerHTML = `<div class="empty-state">✅ Demande envoyée ! L'administrateur va valider ton paiement sous peu, tu recevras un message dès l'activation.</div>`;
