@@ -25,7 +25,7 @@ function paymentMethodsHtml() {
     <div class="payment-method" data-method="mobile_money">
       <div>
         <div class="payment-method__name">📱 Mobile Money</div>
-        <div class="payment-method__sub">Orange, MTN, Wave, Moov — validation admin</div>
+        <div class="payment-method__sub">Orange, MTN, Airtel, Moov — validation admin</div>
       </div>
     </div>
     <div class="payment-method" data-method="nowpayments">
@@ -118,7 +118,7 @@ async function handleMethodClick(content, method, passId, promoCode) {
       mmAccounts = {};
     }
 
-    const operators = ['Orange Money', 'MTN Mobile Money', 'Wave', 'Moov Money'];
+    const operators = ['Orange Money', 'MTN Mobile Money', 'Airtel Money', 'Moov Money'];
     const renderAccountBox = (operator) => {
       const account = mmAccounts[operator];
       return account
