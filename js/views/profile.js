@@ -1,8 +1,52 @@
-import { api } from '../api.js';
+import { api, isInsideTelegram, getSessionToken, setSessionToken, clearSessionToken } from '../api.js';
 
 function formatDate(iso) {
   if (!iso) return null;
   return new Date(iso).toLocaleDateString('fr-FR', { day: '2-digit', month: 'long', year: 'numeric' });
+}
+
+// Rendu du bouton officiel "Se connecter avec Telegram" (Login Widget).
+// N'apparaît que quand la Mini App est ouverte hors de l'app Telegram (pas
+// de initData) et qu'aucune session valide n'est déjà stockée. La signature
+// est vérifiée côté serveur (verifyTelegramLoginWidget) : on ne fait jamais
+// confiance à ces données côté client.
+function renderLoginWidget(container, onSuccess) {
+  const botUsername = window.__BOT_USERNAME__;
+  container.innerHTML = `
+    <div class="empty-state" style="padding-top:40px;">
+      Ouvre l'app depuis Telegram pour un accès automatique,<br>
+      ou connecte-toi ici :
+    </div>
+    <div id="tg-login-widget" style="display:flex;justify-content:center;margin-top:16px;"></div>
+  `;
+
+  if (!botUsername || botUsername === 'TonBot_bot') {
+    container.querySelector('#tg-login-widget').innerHTML =
+      `<div style="font-size:11px;color:var(--text-muted);text-align:center;">(Configuration manquante : window.__BOT_USERNAME__ dans index.html, + /setdomain sur @BotFather)</div>`;
+    return;
+  }
+
+  window.onTelegramAuth = async (tgUser) => {
+    try {
+      const { token } = await api.loginWithTelegramWidget(tgUser);
+      setSessionToken(token);
+      onSuccess();
+    } catch (e) {
+      container.querySelector('#tg-login-widget').insertAdjacentHTML(
+        'beforeend',
+        `<div style="color:var(--red);font-size:12px;margin-top:8px;">${e.message}</div>`
+      );
+    }
+  };
+
+  const script = document.createElement('script');
+  script.src = 'https://telegram.org/js/telegram-widget.js?22';
+  script.setAttribute('data-telegram-login', botUsername);
+  script.setAttribute('data-size', 'large');
+  script.setAttribute('data-radius', '10');
+  script.setAttribute('data-onauth', 'onTelegramAuth(user)');
+  script.setAttribute('data-request-access', 'write');
+  container.querySelector('#tg-login-widget').appendChild(script);
 }
 
 export async function renderProfile(container) {
@@ -17,6 +61,13 @@ export async function renderProfile(container) {
   `;
 
   const content = container.querySelector('#profile-content');
+
+  // Hors de l'app Telegram et sans session déjà stockée : on propose direct
+  // le bouton de connexion plutôt que d'afficher une erreur 401.
+  if (!isInsideTelegram() && !getSessionToken()) {
+    renderLoginWidget(content, () => renderProfile(container));
+    return;
+  }
 
   try {
     const { user } = await api.getMe();
@@ -76,6 +127,13 @@ export async function renderProfile(container) {
           .join('')
       : `<div class="empty-state">Aucune transaction pour le moment.</div>`;
   } catch (e) {
+    // Session de repli invalide/expirée : on l'efface et on propose de se
+    // reconnecter plutôt que d'afficher une erreur brute en boucle.
+    if (!isInsideTelegram()) {
+      clearSessionToken();
+      renderLoginWidget(content, () => renderProfile(container));
+      return;
+    }
     content.innerHTML = `<div class="empty-state">Impossible de charger ton profil.<br><span style="font-size:11px;opacity:0.6;">${e.message}</span></div>`;
   }
 }
