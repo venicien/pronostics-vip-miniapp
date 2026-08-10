@@ -18,11 +18,48 @@ function renderLoginWidget(container, onSuccess) {
       ou connecte-toi ici :
     </div>
     <div id="tg-login-widget" style="display:flex;justify-content:center;margin-top:16px;"></div>
+
+    <div style="text-align:center;margin:20px 0;color:var(--text-muted);font-size:12px;">— ou —</div>
+
+    <div style="max-width:280px;margin:0 auto;">
+      <p style="font-size:13px;color:var(--text-muted);text-align:center;margin-bottom:12px;">
+        Envoie <span class="mono" style="color:var(--gold);">/login</span> à notre bot Telegram, il te donne un code à 6 chiffres. Colle-le ici :
+      </p>
+      <div style="display:flex;gap:8px;">
+        <input id="login-code-input" type="text" inputmode="numeric" maxlength="6" placeholder="123456"
+          style="flex:1;background:var(--surface);border:1px solid var(--border);border-radius:8px;padding:10px 12px;color:#fff;font-family:var(--font-mono);font-size:16px;text-align:center;letter-spacing:0.1em;" />
+        <button id="login-code-submit" class="btn-primary" style="width:auto;padding:0 18px;">Valider</button>
+      </div>
+      <div id="login-code-error" style="color:var(--red);font-size:12px;margin-top:8px;text-align:center;"></div>
+      ${botUsername && botUsername !== 'TonBot_bot' ? `<div style="text-align:center;margin-top:14px;"><a href="https://t.me/${botUsername}?start=login" style="color:var(--gold);font-size:12px;" target="_blank">Ouvrir le bot →</a></div>` : ''}
+    </div>
   `;
+
+  const codeInput = container.querySelector('#login-code-input');
+  const codeError = container.querySelector('#login-code-error');
+  const submitCode = async () => {
+    const code = codeInput.value.trim();
+    if (!/^\d{6}$/.test(code)) {
+      codeError.textContent = 'Le code doit contenir 6 chiffres.';
+      return;
+    }
+    codeError.textContent = '';
+    try {
+      const { token } = await api.loginWithCode(code);
+      setSessionToken(token);
+      onSuccess();
+    } catch (e) {
+      codeError.textContent = e.message;
+    }
+  };
+  container.querySelector('#login-code-submit').addEventListener('click', submitCode);
+  codeInput.addEventListener('keydown', (e) => {
+    if (e.key === 'Enter') submitCode();
+  });
 
   if (!botUsername || botUsername === 'TonBot_bot') {
     container.querySelector('#tg-login-widget').innerHTML =
-      `<div style="font-size:11px;color:var(--text-muted);text-align:center;">(Configuration manquante : window.__BOT_USERNAME__ dans index.html, + /setdomain sur @BotFather)</div>`;
+      `<div style="font-size:11px;color:var(--text-muted);text-align:center;">(Widget non configuré — utilise le code ci-dessous)</div>`;
     return;
   }
 
