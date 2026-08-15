@@ -40,10 +40,10 @@ function paymentMethodsHtml() {
         <div class="payment-method__sub">Multi-réseaux — validation automatique</div>
       </div>
     </div>
-    <div class="payment-method" data-method="wallet_pay">
+    <div class="payment-method" data-method="crypto_manual">
       <div>
-        <div class="payment-method__name">💎 Telegram Wallet Pay</div>
-        <div class="payment-method__sub">Paiement natif dans Telegram</div>
+        <div class="payment-method__name">₿ Crypto — Adresse manuelle</div>
+        <div class="payment-method__sub">USDT, BTC, TON — validation admin</div>
       </div>
     </div>
     <div class="payment-method" data-method="paypal">
@@ -163,12 +163,65 @@ async function handleMethodClick(content, method, passId, promoCode) {
     return;
   }
 
+  if (method === 'crypto_manual') {
+    detail.innerHTML = `<div class="empty-state">Chargement…</div>`;
+
+    let cryptoAddresses = {};
+    try {
+      const { settings } = await api.getSettings();
+      cryptoAddresses = JSON.parse(settings.crypto_manual_addresses || '{}');
+    } catch (e) {
+      cryptoAddresses = {};
+    }
+
+    const networks = ['USDT (TRC20)', 'USDT (BEP20)', 'Bitcoin (BTC)', 'TON'];
+    const renderAddressBox = (network) => {
+      const address = cryptoAddresses[network];
+      return address
+        ? `<div class="calc-box" style="border-color:var(--gold);"><label>Envoie le montant exact à :</label><div class="mono" style="font-size:14px;color:var(--gold);margin-top:4px;word-break:break-all;">${address}</div></div>`
+        : `<div class="empty-state" style="font-size:12px;">Adresse non configurée pour ce réseau, contacte le support.</div>`;
+    };
+
+    detail.innerHTML = `
+      <div class="calc-box">
+        <label>Réseau</label>
+        <select id="cm-network" style="width:100%;margin-top:6px;padding:10px;border-radius:8px;background:var(--surface);color:var(--text);border:1px solid var(--border);">
+          ${networks.map((n) => `<option value="${n}">${n}</option>`).join('')}
+        </select>
+      </div>
+      <div id="cm-address-box">${renderAddressBox(networks[0])}</div>
+      <div class="calc-box">
+        <label>Hash de transaction (preuve de paiement)</label>
+        <input type="text" id="cm-txhash" placeholder="Ex : 0xabc123... ou l'ID de transaction" />
+        <button class="btn-primary" id="cm-submit" style="margin-top:14px;">Envoyer pour validation</button>
+      </div>
+    `;
+
+    detail.querySelector('#cm-network').addEventListener('change', (e) => {
+      detail.querySelector('#cm-address-box').innerHTML = renderAddressBox(e.target.value);
+    });
+
+    detail.querySelector('#cm-submit').addEventListener('click', async () => {
+      const network = detail.querySelector('#cm-network').value;
+      const address = cryptoAddresses[network];
+      const txHash = detail.querySelector('#cm-txhash').value.trim();
+      if (!address) return;
+      if (!txHash) return;
+      try {
+        await api.submitManualCrypto({ passId, network, address, txHash, promoCode });
+        detail.innerHTML = `<div class="empty-state">✅ Demande envoyée ! L'administrateur va valider ton paiement sous peu, tu recevras un message dès l'activation.</div>`;
+      } catch (e) {
+        detail.innerHTML = `<div class="empty-state">Erreur : ${e.message}</div>`;
+      }
+    });
+    return;
+  }
+
   detail.innerHTML = `<div class="empty-state">Génération du lien de paiement…</div>`;
   try {
     let result;
     if (method === 'nowpayments') result = await api.initiateNowPayments({ passId, promoCode });
     if (method === 'cryptomus') result = await api.initiateCryptomus({ passId, promoCode });
-    if (method === 'wallet_pay') result = await api.initiateWalletPay({ passId, promoCode });
     if (method === 'paypal') result = await api.createPaypalOrder({ passId, promoCode });
 
     const link = result?.invoice?.invoiceUrl || result?.invoice?.payLink || result?.order?.payLink || result?.order?.approveLink;
