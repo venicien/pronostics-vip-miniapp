@@ -155,7 +155,17 @@ async function handleMethodClick(content, method, passId, promoCode) {
       const phoneOrTxId = ref ? `${phone} (réf. ${ref})` : phone;
       try {
         await api.submitMobileMoney({ passId, operator, phoneOrTxId, promoCode });
-        detail.innerHTML = `<div class="empty-state">✅ Demande envoyée ! L'administrateur va valider ton paiement sous peu, tu recevras un message dès l'activation.</div>`;
+        detail.innerHTML = `
+          <div class="empty-state" style="padding: 20px; text-align: center;">
+            <div style="font-size: 40px; margin-bottom: 10px;">⏳</div>
+            <h3 style="margin-bottom: 10px; color: var(--gold);">Paiement en cours de vérification</h3>
+            <p style="color: var(--text); line-height: 1.5; font-size: 14px;">
+              Votre demande a bien été envoyée. L'administrateur va valider votre paiement manuellement.<br><br>
+              <strong>Cela prend généralement quelques minutes.</strong><br><br>
+              Vous recevrez une notification (via le Bot Telegram) dès que votre accès VIP sera activé.
+            </p>
+          </div>
+        `;
       } catch (e) {
         detail.innerHTML = `<div class="empty-state">Erreur : ${e.message}</div>`;
       }
@@ -209,7 +219,17 @@ async function handleMethodClick(content, method, passId, promoCode) {
       if (!txHash) return;
       try {
         await api.submitManualCrypto({ passId, network, address, txHash, promoCode });
-        detail.innerHTML = `<div class="empty-state">✅ Demande envoyée ! L'administrateur va valider ton paiement sous peu, tu recevras un message dès l'activation.</div>`;
+        detail.innerHTML = `
+          <div class="empty-state" style="padding: 20px; text-align: center;">
+            <div style="font-size: 40px; margin-bottom: 10px;">⏳</div>
+            <h3 style="margin-bottom: 10px; color: var(--gold);">Paiement en cours de vérification</h3>
+            <p style="color: var(--text); line-height: 1.5; font-size: 14px;">
+              Votre demande a bien été envoyée. L'administrateur va valider votre paiement manuellement.<br><br>
+              <strong>Cela prend généralement quelques minutes.</strong><br><br>
+              Vous recevrez une notification (via le Bot Telegram) dès que votre accès VIP sera activé.
+            </p>
+          </div>
+        `;
       } catch (e) {
         detail.innerHTML = `<div class="empty-state">Erreur : ${e.message}</div>`;
       }
