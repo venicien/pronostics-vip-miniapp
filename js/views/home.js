@@ -8,7 +8,14 @@ function confidenceDots(level = 0) {
 }
 
 function resultBadge(status) {
-  const map = { valide: ['VALIDÉ ✅', 'valide'], perdu: ['PERDU ❌', 'perdu'], en_attente: ['EN ATTENTE', 'attente'] };
+  const map = { 
+    valide: ['VALIDÉ ✅', 'valide'], 
+    gagne: ['GAGNÉ ✅', 'valide'], 
+    perdu: ['PERDU ❌', 'perdu'], 
+    rembourse: ['REMBOURSÉ 🔄', 'attente'],
+    annule: ['ANNULÉ 🚫', 'attente'],
+    en_attente: ['EN ATTENTE', 'attente'] 
+  };
   const [label, cls] = map[status] || map.en_attente;
   return `<span class="ticket__result-badge ${cls}">${label}</span>`;
 }
@@ -32,25 +39,80 @@ function ticketImage(item) {
   return `<img class="ticket__image" src="${item.image_url}" alt="" loading="lazy" onerror="this.remove()">`;
 }
 
+function renderSelection(sel) {
+  let dateStr = '';
+  if (sel.event_date) {
+    const d = new Date(sel.event_date);
+    dateStr = d.toLocaleDateString('fr-FR', { day: '2-digit', month: '2-digit' }) + ' - ' + d.toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' });
+  }
+  
+  const statusMap = {
+    gagne: '<span class="ticket__selection-status gagne">GAGNÉ ✅</span>',
+    perdu: '<span class="ticket__selection-status perdu">PERDU ❌</span>',
+    rembourse: '<span class="ticket__selection-status rembourse">REMBOURSÉ 🔄</span>',
+    annule: '<span class="ticket__selection-status rembourse">ANNULÉ 🚫</span>',
+    en_attente: ''
+  };
+
+  return `
+    <div class="ticket__selection">
+      <div class="ticket__selection-header">
+        <span>${sel.competition || ''}</span>
+        <span>${dateStr}</span>
+      </div>
+      <div class="ticket__selection-teams">
+        ${sel.team1_logo_url ? `<img src="${sel.team1_logo_url}" class="ticket__selection-logo" alt="">` : ''}
+        <span>${sel.team1_name || ''}</span>
+        <span style="color: var(--text-muted); font-size: 11px;">vs</span>
+        <span>${sel.team2_name || ''}</span>
+        ${sel.team2_logo_url ? `<img src="${sel.team2_logo_url}" class="ticket__selection-logo" alt="">` : ''}
+      </div>
+      <div class="ticket__selection-footer">
+        <div class="ticket__selection-label">${sel.selection_label || ''}</div>
+        <div style="display: flex; align-items: center; gap: 8px;">
+          ${statusMap[sel.result_status] || ''}
+          <div class="ticket__selection-cote">${sel.cote ? sel.cote.toFixed(2) : '-'}</div>
+        </div>
+      </div>
+    </div>
+  `;
+}
+
 function renderPronosticTicket(item) {
+  const isCombine = item.type === 'pronostic_combine';
+  
+  // Rendu des sélections
+  let selectionsHtml = '';
+  if (item.selections && item.selections.length > 0) {
+    selectionsHtml = `
+      <div class="ticket__selections">
+        ${item.selections.map(renderSelection).join('')}
+      </div>
+    `;
+  }
+  
   return `
     <div class="ticket" data-id="${item.id}">
       ${ticketImage(item)}
       <div class="ticket__body ticket__body--clickable">
         <div class="ticket__label">
-          <span>🎟️ Pronostic${item.type === 'pronostic_combine' ? ' combiné' : ''}</span>
+          <span>🎟️ Pronostic${isCombine ? ' combiné' : ''}</span>
           <span class="ticket__date">${formatPublishedDate(item.published_at)}</span>
         </div>
-        <div class="ticket__match">${item.match_label || item.title}</div>
-        <p class="ticket__analyse">${item.analyse || ''}</p>
+        ${!isCombine && item.match_label ? `<div class="ticket__match">${item.match_label}</div>` : ''}
+        ${selectionsHtml}
+        ${item.analyse ? `<p class="ticket__analyse" style="margin-top: 12px;">${item.analyse}</p>` : ''}
       </div>
       <div class="ticket__tear"></div>
       <div class="ticket__stub">
         <div class="ticket__cote-block">
-          <span class="ticket__cote-label">Cote</span>
+          <span class="ticket__cote-label">Cote ${isCombine ? 'Totale' : ''}</span>
           <span class="ticket__cote mono">${item.cote ?? '-'}</span>
         </div>
-        <div class="confidence">${confidenceDots(item.niveau_confiance)}</div>
+        <div style="display: flex; flex-direction: column; align-items: flex-end; gap: 6px;">
+          ${resultBadge(item.result_status)}
+          <div class="confidence">${confidenceDots(item.niveau_confiance)}</div>
+        </div>
       </div>
     </div>
   `;

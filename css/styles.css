@@ -338,6 +338,75 @@ button {
 .ticket__result-badge.perdu { background: rgba(214,69,69,0.15); color: var(--red); }
 .ticket__result-badge.attente { background: rgba(143,167,154,0.15); color: var(--text-muted); }
 
+.ticket__selections {
+  margin-top: 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.ticket__selection {
+  background: rgba(0, 0, 0, 0.2);
+  border: 1px solid rgba(255, 255, 255, 0.05);
+  border-radius: 8px;
+  padding: 10px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.ticket__selection-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: 11px;
+  color: var(--text-muted);
+}
+
+.ticket__selection-teams {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-weight: 600;
+  font-size: 13px;
+}
+
+.ticket__selection-logo {
+  width: 20px;
+  height: 20px;
+  object-fit: contain;
+}
+
+.ticket__selection-footer {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-top: 4px;
+  padding-top: 6px;
+  border-top: 1px dashed rgba(255, 255, 255, 0.1);
+}
+
+.ticket__selection-label {
+  font-size: 12px;
+  color: var(--gold);
+}
+
+.ticket__selection-cote {
+  font-family: var(--font-mono);
+  font-size: 13px;
+  font-weight: 600;
+}
+
+.ticket__selection-status {
+  font-size: 10px;
+  padding: 2px 6px;
+  border-radius: 4px;
+  font-weight: 600;
+}
+.ticket__selection-status.gagne { background: rgba(34, 197, 94, 0.15); color: var(--green); }
+.ticket__selection-status.perdu { background: rgba(239, 68, 68, 0.15); color: var(--red); }
+.ticket__selection-status.rembourse { background: rgba(255, 255, 255, 0.1); color: var(--text-muted); }
+
 .ticket__cta {
   display: block;
   margin: 0 16px 16px;
