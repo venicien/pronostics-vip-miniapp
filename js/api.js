@@ -68,4 +68,6 @@ export const api = {
   getBookmakers: () => request('/api/public/bookmakers', { auth: false }),
   getSettings: () => request('/api/public/settings', { auth: false }),
   getFaq: () => request('/api/public/faq', { auth: false }),
+  getStats: () => request('/api/public/stats', { auth: false }),
+  getHistory: () => request('/api/public/history?limit=20', { auth: false }),
 };

@@ -109,6 +109,28 @@ export async function renderHome(container) {
     <div class="topbar">
       <div class="eyebrow">Fil d'actualité</div>
       <h1>Pronostics &amp; bilans</h1>
+      
+      <div id="stats-container" class="stats-container" style="display: none; margin: 15px 0; background: var(--bg-card); padding: 15px; border-radius: 12px; border: 1px solid rgba(255, 255, 255, 0.05);">
+        <div style="font-size: 12px; color: var(--text-muted); margin-bottom: 10px; text-transform: uppercase; letter-spacing: 0.5px; display: flex; justify-content: space-between; align-items: center;">
+          <span>Performances vérifiées</span>
+          <span style="color: var(--gold);"><i class="icon">🔒</i> 100% Transparent</span>
+        </div>
+        <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; text-align: center;">
+          <div>
+            <div id="stat-winrate" style="font-size: 24px; font-weight: 700; color: var(--green);">-</div>
+            <div style="font-size: 11px; color: var(--text-muted);">Réussite</div>
+          </div>
+          <div style="border-left: 1px solid rgba(255, 255, 255, 0.1); border-right: 1px solid rgba(255, 255, 255, 0.1);">
+            <div id="stat-units" style="font-size: 24px; font-weight: 700; color: var(--text);">-</div>
+            <div style="font-size: 11px; color: var(--text-muted);">Bénéfice (U)</div>
+          </div>
+          <div>
+            <div id="stat-cote" style="font-size: 24px; font-weight: 700; color: var(--text);">-</div>
+            <div style="font-size: 11px; color: var(--text-muted);">Cote moy.</div>
+          </div>
+        </div>
+      </div>
+
       <div class="filter-tabs" id="home-filters">
         ${FILTERS.map((f, i) => `<button class="filter-tab${i === 0 ? ' active' : ''}" data-filter="${f.key}">${f.label}</button>`).join('')}
       </div>
@@ -160,6 +182,21 @@ export async function renderHome(container) {
       return;
     }
     draw();
+    
+    // Charger les stats de manière asynchrone pour ne pas bloquer le feed
+    try {
+      const { stats } = await api.getStats();
+      if (stats && stats.total > 0) {
+        container.querySelector('#stats-container').style.display = 'block';
+        container.querySelector('#stat-winrate').textContent = \`\${stats.winRate}%\`;
+        container.querySelector('#stat-units').textContent = stats.totalUnits > 0 ? \`+\${stats.totalUnits}\` : stats.totalUnits;
+        container.querySelector('#stat-units').style.color = stats.totalUnits > 0 ? 'var(--green)' : (stats.totalUnits < 0 ? 'var(--red)' : 'var(--text)');
+        container.querySelector('#stat-cote').textContent = stats.averageCote;
+      }
+    } catch (err) {
+      console.warn('Erreur chargement stats:', err);
+    }
+    
   } catch (e) {
     feed.innerHTML = `<div class="empty-state">Impossible de charger le flux pour le moment.</div>`;
   }

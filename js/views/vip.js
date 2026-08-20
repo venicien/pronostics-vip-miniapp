@@ -61,6 +61,9 @@ export async function renderVip(container) {
       <div class="eyebrow">Accès exclusif</div>
       <h1>Passes VIP</h1>
     </div>
+    <div style="background: rgba(255, 60, 60, 0.1); border-left: 3px solid var(--red); padding: 12px 15px; margin: 0 20px 15px 20px; border-radius: 4px; font-size: 12px; color: #ddd;">
+      <strong>Rappel :</strong> L'accès VIP vous donne nos analyses et pronostics exclusifs, mais <strong>aucun gain n'est garanti</strong>. Les paris sportifs comportent des risques de perte financière.
+    </div>
     <div class="view" id="vip-content">
       <div class="skeleton"></div>
       <div class="skeleton"></div>
