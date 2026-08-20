@@ -6,17 +6,39 @@ function openLink(url) {
   else window.open(url, '_blank');
 }
 
+function escapeHtml(value = '') {
+  return String(value).replace(/[&<>\"']/g, (char) => ({
+    '&': '&amp;', '<': '&lt;', '>': '&gt;', '\"': '&quot;', "'": '&#039;'
+  }[char]));
+}
+
+const OFFER_BADGES = {
+  flash: 'Tester sans engagement',
+  decouverte: 'Découvrir le VIP',
+  mensuel: 'Le plus choisi',
+  trimestriel: 'Économie 17%',
+  saison: 'Meilleur prix / jour',
+  lifetime: 'Accès permanent',
+};
+
 function passCardHtml(pass) {
   const duration = pass.duration_days ? `${pass.duration_days} jour${pass.duration_days > 1 ? 's' : ''}` : 'À vie';
   const featured = pass.type === 'mensuel';
+  const bestValue = pass.type === 'saison';
+  const price = Number(pass.price_xaf || 0);
+  const dailyPrice = pass.duration_days ? Math.ceil(price / pass.duration_days).toLocaleString('fr-FR') : null;
+  const badge = OFFER_BADGES[pass.type] || 'Accès VIP';
   return `
-    <div class="pass-card ${featured ? 'featured' : ''}" data-pass-id="${pass.id}" data-pass-name="${pass.name}">
-      <div>
-        <div class="pass-card__name">${pass.name}</div>
-        <div class="pass-card__duration">${duration}</div>
-      </div>
-      <div class="pass-card__price mono">${pass.price_xaf.toLocaleString('fr-FR')} XAF</div>
-    </div>
+    <button class="pass-card ${featured ? 'featured' : ''} ${bestValue ? 'best-value' : ''}" data-pass-id="${escapeHtml(pass.id)}" data-pass-name="${escapeHtml(pass.name)}" type="button">
+      <span class="pass-card__badge">${badge}</span>
+      <span class="pass-card__main">
+        <span>
+          <span class="pass-card__name">${escapeHtml(pass.name)}</span>
+          <span class="pass-card__duration">${duration}${dailyPrice ? ` · environ ${dailyPrice} XAF / jour` : ''}</span>
+        </span>
+        <span class="pass-card__price mono">${price.toLocaleString('fr-FR')} XAF</span>
+      </span>
+    </button>
   `;
 }
 
@@ -25,33 +47,27 @@ function paymentMethodsHtml() {
     <div class="payment-method" data-method="mobile_money">
       <div>
         <div class="payment-method__name">📱 Mobile Money</div>
-        <div class="payment-method__sub">Orange, MTN, Airtel, Moov — validation admin</div>
+        <div class="payment-method__sub">Orange, MTN, Airtel ou Moov · validation manuelle</div>
       </div>
-    </div>
-    <div class="payment-method" data-method="nowpayments">
-      <div>
-        <div class="payment-method__name">₿ Crypto — NOWPayments</div>
-        <div class="payment-method__sub">USDT, BTC, TON — validation automatique</div>
-      </div>
-    </div>
-    <div class="payment-method" data-method="cryptomus">
-      <div>
-        <div class="payment-method__name">₿ Crypto — Cryptomus</div>
-        <div class="payment-method__sub">Multi-réseaux — validation automatique</div>
-      </div>
+      <span class="payment-method__tag">Recommandé</span>
     </div>
     <div class="payment-method" data-method="crypto_manual">
       <div>
-        <div class="payment-method__name">₿ Crypto — Adresse manuelle</div>
-        <div class="payment-method__sub">USDT, BTC, TON — validation admin</div>
+        <div class="payment-method__name">₿ Crypto · adresse manuelle</div>
+        <div class="payment-method__sub">USDT, BTC ou TON · validation manuelle</div>
       </div>
+      <span class="payment-method__tag">Manuel</span>
     </div>
-    <div class="payment-method" data-method="paypal">
-      <div>
-        <div class="payment-method__name">🅿️ PayPal</div>
-        <div class="payment-method__sub">Carte bancaire via PayPal</div>
-      </div>
-    </div>
+    <p class="payment-note">Tu paies directement à l'adresse indiquée, puis tu transmets l'identifiant ou le hash de transaction. Un administrateur vérifie chaque paiement avant l'activation.</p>
+  `;
+}
+
+function responsibleAcknowledgementHtml() {
+  return `
+    <label class="responsible-check">
+      <input type="checkbox" id="responsible-consent" />
+      <span>Je confirme avoir l'âge légal requis dans mon pays et comprendre qu'aucun gain n'est garanti. Je ne mise jamais de l'argent emprunté.</span>
+    </label>
   `;
 }
 
@@ -74,7 +90,20 @@ export async function renderVip(container) {
 
   try {
     const { passes } = await api.getVipPasses();
-    content.innerHTML = passes.map(passCardHtml).join('');
+    content.innerHTML = `
+      <section class="vip-offer-intro">
+        <div class="vip-offer-intro__eyebrow">Ce que comprend chaque Pass</div>
+        <h2>Un accès clair, sans promesse irréaliste</h2>
+        <div class="vip-benefits">
+          <span>✓ Pronostics et analyses exclusifs</span>
+          <span>✓ Résultats publiés et vérifiables</span>
+          <span>✓ Accès au canal VIP pendant la durée choisie</span>
+        </div>
+        <p>Choisis la durée qui correspond à ton budget. Le paiement est manuel, sans passerelle automatique : l'accès est activé après vérification humaine.</p>
+      </section>
+      <div class="pass-list">${passes.map(passCardHtml).join('')}</div>
+      <p class="offer-footnote">Les tarifs affichés sont ceux facturés. Un renouvellement avant l'échéance prolonge la durée restante ; il n'y a pas de prélèvement automatique.</p>
+    `;
 
     content.querySelectorAll('.pass-card').forEach((card) => {
       card.addEventListener('click', () => showPaymentStep(container, card.dataset.passId, card.dataset.passName));
@@ -89,6 +118,11 @@ function showPaymentStep(container, passId, passName) {
   content.innerHTML = `
     <button class="btn-secondary" id="back-btn" style="margin-bottom:16px;">← Retour</button>
     <div class="section-title">Paiement — ${passName}</div>
+    <div class="payment-steps">
+      <span class="payment-step active"><b>1</b> Choisir le mode</span>
+      <span class="payment-step"><b>2</b> Envoyer la preuve</span>
+      <span class="payment-step"><b>3</b> Recevoir l'accès</span>
+    </div>
     <div class="calc-box">
       <label>Code promo (optionnel)</label>
       <input type="text" id="promo-code-input" placeholder="Ex : A1B2C3D4" style="width:100%;margin-top:6px;padding:10px;border-radius:8px;background:var(--surface);color:var(--text);border:1px solid var(--border);text-transform:uppercase;" />
@@ -142,6 +176,7 @@ async function handleMethodClick(content, method, passId, promoCode) {
         <input type="text" id="mm-txid" placeholder="Ex : 07 00 00 00 00" />
         <label style="display:block;margin-top:10px;">ID de transaction (si ton opérateur en fournit un)</label>
         <input type="text" id="mm-ref" placeholder="Optionnel" />
+        ${responsibleAcknowledgementHtml()}
         <button class="btn-primary" id="mm-submit" style="margin-top:14px;">Envoyer pour validation</button>
       </div>
     `;
@@ -155,6 +190,10 @@ async function handleMethodClick(content, method, passId, promoCode) {
       const phone = detail.querySelector('#mm-txid').value.trim();
       const ref = detail.querySelector('#mm-ref').value.trim();
       if (!phone) return;
+      if (!detail.querySelector('#responsible-consent')?.checked) {
+        detail.querySelector('#responsible-consent')?.focus();
+        return;
+      }
       const phoneOrTxId = ref ? `${phone} (réf. ${ref})` : phone;
       try {
         await api.submitMobileMoney({ passId, operator, phoneOrTxId, promoCode });
@@ -206,6 +245,7 @@ async function handleMethodClick(content, method, passId, promoCode) {
       <div class="calc-box">
         <label>Hash de transaction (preuve de paiement)</label>
         <input type="text" id="cm-txhash" placeholder="Ex : 0xabc123... ou l'ID de transaction" />
+        ${responsibleAcknowledgementHtml()}
         <button class="btn-primary" id="cm-submit" style="margin-top:14px;">Envoyer pour validation</button>
       </div>
     `;
@@ -220,6 +260,10 @@ async function handleMethodClick(content, method, passId, promoCode) {
       const txHash = detail.querySelector('#cm-txhash').value.trim();
       if (!address) return;
       if (!txHash) return;
+      if (!detail.querySelector('#responsible-consent')?.checked) {
+        detail.querySelector('#responsible-consent')?.focus();
+        return;
+      }
       try {
         await api.submitManualCrypto({ passId, network, address, txHash, promoCode });
         detail.innerHTML = `
@@ -240,21 +284,5 @@ async function handleMethodClick(content, method, passId, promoCode) {
     return;
   }
 
-  detail.innerHTML = `<div class="empty-state">Génération du lien de paiement…</div>`;
-  try {
-    let result;
-    if (method === 'nowpayments') result = await api.initiateNowPayments({ passId, promoCode });
-    if (method === 'cryptomus') result = await api.initiateCryptomus({ passId, promoCode });
-    if (method === 'paypal') result = await api.createPaypalOrder({ passId, promoCode });
-
-    const link = result?.invoice?.invoiceUrl || result?.invoice?.payLink || result?.order?.payLink || result?.order?.approveLink;
-    if (link) {
-      openLink(link);
-      detail.innerHTML = `<div class="empty-state">Redirection vers le paiement… si rien ne se passe, <a href="${link}" style="color:var(--gold)">clique ici</a>.</div>`;
-    } else {
-      detail.innerHTML = `<div class="empty-state">Lien de paiement indisponible pour le moment.</div>`;
-    }
-  } catch (e) {
-    detail.innerHTML = `<div class="empty-state">Erreur : ${e.message}</div>`;
-  }
+  detail.innerHTML = `<div class="empty-state">Mode de paiement indisponible. Choisis Mobile Money ou Crypto manuel.</div>`;
 }

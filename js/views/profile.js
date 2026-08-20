@@ -5,6 +5,45 @@ function formatDate(iso) {
   return new Date(iso).toLocaleDateString('fr-FR', { day: '2-digit', month: 'long', year: 'numeric' });
 }
 
+function daysRemaining(iso) {
+  if (!iso) return null;
+  return Math.max(0, Math.ceil((new Date(iso).getTime() - Date.now()) / 86400000));
+}
+
+function openVipRoute() {
+  document.querySelector('.bottom-nav button[data-route="vip"]')?.click();
+}
+
+function vipJourneyHtml(user) {
+  if (!user.isVip) {
+    return `
+      <section class="profile-onboarding">
+        <div class="profile-onboarding__eyebrow">Bien démarrer</div>
+        <h2>Ton accès VIP en 3 étapes</h2>
+        <div class="onboarding-step"><b>1</b><span><strong>Choisis une durée</strong><small>Flash, découverte, mensuel ou longue durée.</small></span></div>
+        <div class="onboarding-step"><b>2</b><span><strong>Paie manuellement</strong><small>Envoie le montant puis transmets ton ID ou hash.</small></span></div>
+        <div class="onboarding-step"><b>3</b><span><strong>Attends la validation</strong><small>L'administrateur confirme avant d'activer ton accès.</small></span></div>
+        <button class="btn-primary" id="profile-start-vip" type="button">Voir les offres VIP</button>
+      </section>
+    `;
+  }
+
+  if (!user.vipExpiresAt) {
+    return `<div class="profile-notice profile-notice--success">Ton accès VIP est permanent. Aucun renouvellement automatique n'est activé.</div>`;
+  }
+
+  const remaining = daysRemaining(user.vipExpiresAt);
+  const urgency = remaining <= 7 ? 'profile-notice--warning' : 'profile-notice--success';
+  const label = remaining <= 7 ? 'Renouveler maintenant' : 'Prolonger mon accès';
+  return `
+    <section class="profile-notice ${urgency}">
+      <strong>${remaining === 0 ? 'Ton accès arrive à échéance.' : `Il te reste ${remaining} jour${remaining > 1 ? 's' : ''} de VIP.`}</strong>
+      <p>Un renouvellement avant l'échéance s'ajoute à ta durée restante : tu ne perds pas les jours déjà acquis.</p>
+      <button class="btn-primary" id="profile-renew-vip" type="button">${label}</button>
+    </section>
+  `;
+}
+
 // Rendu du bouton officiel "Se connecter avec Telegram" (Login Widget).
 // N'apparaît que quand la Mini App est ouverte hors de l'app Telegram (pas
 // de initData) et qu'aucune session valide n'est déjà stockée. La signature
@@ -119,6 +158,8 @@ export async function renderProfile(container) {
         ${user.isVip && !user.vipExpiresAt ? `<div style="color:var(--text-muted);font-size:12px;margin-top:6px;">Accès à vie</div>` : ''}
       </div>
 
+      ${vipJourneyHtml(user)}
+
       <div class="wallet-hero">
         <div class="wallet-hero__label">Portefeuille</div>
         <div class="wallet-hero__amount">${Number(user.walletBalance).toLocaleString('fr-FR')} XAF</div>
@@ -137,6 +178,9 @@ export async function renderProfile(container) {
         <a href="/legal/confidentialite.html" target="_blank">Confidentialité</a>
       </div>
     `;
+
+    content.querySelector('#profile-start-vip')?.addEventListener('click', openVipRoute);
+    content.querySelector('#profile-renew-vip')?.addEventListener('click', openVipRoute);
 
     content.querySelector('#copy-ref').addEventListener('click', () => {
       navigator.clipboard?.writeText(user.referralLink);
