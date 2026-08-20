@@ -119,6 +119,12 @@ function renderPronosticTicket(item) {
 }
 
 function renderBilanTicket(item) {
+  const linkedHtml = item.linked_pronostic_id 
+    ? `<div style="font-size: 11px; color: var(--gold); margin-top: 8px; display: flex; align-items: center; gap: 4px;">
+         <i class="icon">🔗</i> Bilan rattaché à un pronostic
+       </div>`
+    : '';
+
   return `
     <div class="ticket" data-id="${item.id}">
       ${ticketImage(item)}
@@ -129,6 +135,7 @@ function renderBilanTicket(item) {
         </div>
         <div class="ticket__match">${item.title}</div>
         <p class="ticket__analyse">${item.body || ''}</p>
+        ${linkedHtml}
       </div>
       <div class="ticket__tear"></div>
       <div class="ticket__stub">
