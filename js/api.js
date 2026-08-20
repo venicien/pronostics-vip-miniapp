@@ -76,4 +76,7 @@ export const api = {
   toggleFavorite: (contentId, is_favorite) => request(`/api/interactions/${contentId}/favorite`, { method: 'POST', body: { is_favorite } }),
   shareContent: (contentId, channel) => request(`/api/interactions/${contentId}/share`, { method: 'POST', body: { channel } }),
   getFavorites: () => request('/api/interactions/favorites'),
+  
+  getComments: (contentId) => request(`/api/comments/${contentId}`, { auth: false }),
+  postComment: (contentId, body) => request(`/api/comments/${contentId}`, { method: 'POST', body: { body } }),
 };

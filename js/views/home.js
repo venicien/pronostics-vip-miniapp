@@ -97,9 +97,19 @@ function renderInteractionsBar(item) {
       <button class="interaction-btn fav-btn ${favClass}" data-action="favorite">
         <i class="icon">${userState.is_favorite ? '★' : '☆'}</i> <span>${userState.is_favorite ? 'Dans mes favoris' : 'Favoris'}</span>
       </button>
+      <button class="interaction-btn comment-btn" data-action="comment">
+        <i class="icon">💬</i> <span>Commenter</span>
+      </button>
       <button class="interaction-btn share-btn" data-action="share">
         <i class="icon">↗</i> <span>Partager</span>
       </button>
+    </div>
+    <div class="ticket__comments" id="comments-${item.id}" style="display: none;">
+      <div class="comments-list"></div>
+      <div class="comment-input-container">
+        <input type="text" class="comment-input" placeholder="Ajouter un commentaire..." maxlength="500">
+        <button class="comment-submit">Envoyer</button>
+      </div>
     </div>
   `;
 }
@@ -293,6 +303,34 @@ export async function renderHome(container) {
           
           await api.toggleFavorite(contentId, isFav);
         }
+        else if (action === 'comment') {
+          const commentsDiv = ticketEl.querySelector('.ticket__comments');
+          const isVisible = commentsDiv.style.display === 'block';
+          
+          if (!isVisible) {
+            commentsDiv.style.display = 'block';
+            const listDiv = commentsDiv.querySelector('.comments-list');
+            listDiv.innerHTML = '<div class="skeleton" style="height: 40px; margin: 10px;"></div>';
+            
+            try {
+              const { comments } = await api.getComments(contentId);
+              if (comments && comments.length > 0) {
+                listDiv.innerHTML = comments.map(c => 
+                  `<div class="comment-item">
+                     <span class="comment-author">${c.author_name}</span>
+                     <span class="comment-body">${c.body.replace(/</g, '&lt;')}</span>
+                   </div>`
+                ).join('');
+              } else {
+                listDiv.innerHTML = '<div style="font-size: 12px; color: var(--text-muted); text-align: center; padding: 10px;">Aucun commentaire pour le moment. Sois le premier !</div>';
+              }
+            } catch (e) {
+              listDiv.innerHTML = '<div style="font-size: 12px; color: var(--red); text-align: center; padding: 10px;">Erreur de chargement.</div>';
+            }
+          } else {
+            commentsDiv.style.display = 'none';
+          }
+        }
         else if (action === 'share') {
           const url = `${window.location.origin}/?content=${contentId}`;
           const title = item.title || item.match_label || 'Pronostic VIP';
@@ -319,6 +357,43 @@ export async function renderHome(container) {
       } catch (err) {
         console.error('Erreur interaction:', err);
         // En cas d'erreur (ex: non authentifié), on pourrait rediriger vers le login
+      }
+      return;
+    }
+    
+    // Gestion de l'envoi de commentaire
+    const commentSubmitBtn = e.target.closest('.comment-submit');
+    if (commentSubmitBtn) {
+      const ticketEl = commentSubmitBtn.closest('.ticket');
+      const contentId = ticketEl.dataset.id;
+      const inputEl = ticketEl.querySelector('.comment-input');
+      const body = inputEl.value.trim();
+      
+      if (!body) return;
+      
+      commentSubmitBtn.disabled = true;
+      commentSubmitBtn.textContent = '...';
+      
+      try {
+        const { comment } = await api.postComment(contentId, body);
+        inputEl.value = '';
+        
+        const listDiv = ticketEl.querySelector('.comments-list');
+        if (listDiv.innerHTML.includes('Aucun commentaire')) {
+          listDiv.innerHTML = '';
+        }
+        
+        listDiv.insertAdjacentHTML('beforeend', 
+          `<div class="comment-item">
+             <span class="comment-author">${comment.author_name}</span>
+             <span class="comment-body">${comment.body.replace(/</g, '&lt;')}</span>
+           </div>`
+        );
+      } catch (err) {
+        alert(err.message || 'Erreur lors de l\'envoi du commentaire');
+      } finally {
+        commentSubmitBtn.disabled = false;
+        commentSubmitBtn.textContent = 'Envoyer';
       }
       return;
     }

@@ -623,3 +623,64 @@ button {
   0% { background-position: 200% 0; }
   100% { background-position: -200% 0; }
 }
+
+/* --- COMMENTAIRES --- */
+.ticket__comments {
+  background: rgba(0, 0, 0, 0.2);
+  border-top: 1px solid rgba(255, 255, 255, 0.05);
+  padding: 12px;
+}
+.comments-list {
+  max-height: 200px;
+  overflow-y: auto;
+  margin-bottom: 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.comment-item {
+  background: rgba(255, 255, 255, 0.03);
+  padding: 8px 12px;
+  border-radius: 8px;
+  font-size: 13px;
+}
+.comment-author {
+  font-weight: 600;
+  color: var(--gold);
+  margin-right: 6px;
+}
+.comment-body {
+  color: var(--text);
+  word-break: break-word;
+}
+.comment-input-container {
+  display: flex;
+  gap: 8px;
+}
+.comment-input {
+  flex: 1;
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 20px;
+  padding: 8px 14px;
+  color: var(--text);
+  font-size: 13px;
+}
+.comment-input:focus {
+  outline: none;
+  border-color: var(--gold);
+}
+.comment-submit {
+  background: var(--gold);
+  color: var(--bg-body);
+  border: none;
+  border-radius: 20px;
+  padding: 0 16px;
+  font-weight: 600;
+  font-size: 13px;
+  cursor: pointer;
+}
+.comment-submit:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
