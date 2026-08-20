@@ -54,18 +54,25 @@ function renderSelection(sel) {
     en_attente: ''
   };
 
+  const hasResult = ['gagne', 'perdu'].includes(sel.result_status);
+  const resultClass = hasResult ? `ticket__selection--${sel.result_status}` : '';
+
   return `
-    <div class="ticket__selection">
+    <div class="ticket__selection ${resultClass}">
       <div class="ticket__selection-header">
         <span>${sel.competition || ''}</span>
         <span>${dateStr}</span>
       </div>
       <div class="ticket__selection-teams">
-        ${sel.team1_logo_url ? `<img src="${sel.team1_logo_url}" class="ticket__selection-logo" alt="">` : ''}
-        <span>${sel.team1_name || ''}</span>
-        <span style="color: var(--text-muted); font-size: 11px;">vs</span>
-        <span>${sel.team2_name || ''}</span>
-        ${sel.team2_logo_url ? `<img src="${sel.team2_logo_url}" class="ticket__selection-logo" alt="">` : ''}
+        <div style="display: flex; align-items: center; gap: 6px; flex: 1; justify-content: flex-end;">
+          <span style="text-align: right;">${sel.team1_name || ''}</span>
+          ${sel.team1_logo_url ? `<img src="${sel.team1_logo_url}" class="ticket__selection-logo" alt="">` : ''}
+        </div>
+        <span style="color: var(--gold-dim); font-size: 11px; font-family: var(--font-mono); margin: 0 4px;">VS</span>
+        <div style="display: flex; align-items: center; gap: 6px; flex: 1;">
+          ${sel.team2_logo_url ? `<img src="${sel.team2_logo_url}" class="ticket__selection-logo" alt="">` : ''}
+          <span>${sel.team2_name || ''}</span>
+        </div>
       </div>
       <div class="ticket__selection-footer">
         <div class="ticket__selection-label">${sel.selection_label || ''}</div>
