@@ -70,4 +70,10 @@ export const api = {
   getFaq: () => request('/api/public/faq', { auth: false }),
   getStats: () => request('/api/public/stats', { auth: false }),
   getHistory: () => request('/api/public/history?limit=20', { auth: false }),
+  
+  getInteractionsState: (contentIds) => request('/api/interactions/state', { method: 'POST', body: { contentIds } }),
+  reactToContent: (contentId, type) => request(`/api/interactions/${contentId}/react`, { method: 'POST', body: { type } }),
+  toggleFavorite: (contentId, is_favorite) => request(`/api/interactions/${contentId}/favorite`, { method: 'POST', body: { is_favorite } }),
+  shareContent: (contentId, channel) => request(`/api/interactions/${contentId}/share`, { method: 'POST', body: { channel } }),
+  getFavorites: () => request('/api/interactions/favorites'),
 };

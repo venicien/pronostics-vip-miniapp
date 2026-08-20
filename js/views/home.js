@@ -78,6 +78,32 @@ function renderSelection(sel) {
   `;
 }
 
+function renderInteractionsBar(item) {
+  const engagement = item.engagement || { likes_count: 0, dislikes_count: 0, favorites_count: 0, shares_count: 0 };
+  const userState = item.userState || { reaction: null, is_favorite: false };
+  
+  const likeClass = userState.reaction === 'like' ? 'active' : '';
+  const dislikeClass = userState.reaction === 'dislike' ? 'active' : '';
+  const favClass = userState.is_favorite ? 'active' : '';
+  
+  return `
+    <div class="ticket__interactions" data-id="${item.id}">
+      <button class="interaction-btn like-btn ${likeClass}" data-action="like">
+        <i class="icon">👍</i> <span>${engagement.likes_count || 'J\\'aime'}</span>
+      </button>
+      <button class="interaction-btn dislike-btn ${dislikeClass}" data-action="dislike">
+        <i class="icon">👎</i> <span>${engagement.dislikes_count || ''}</span>
+      </button>
+      <button class="interaction-btn fav-btn ${favClass}" data-action="favorite">
+        <i class="icon">${userState.is_favorite ? '★' : '☆'}</i> <span>${userState.is_favorite ? 'Dans mes favoris' : 'Favoris'}</span>
+      </button>
+      <button class="interaction-btn share-btn" data-action="share">
+        <i class="icon">↗</i> <span>Partager</span>
+      </button>
+    </div>
+  `;
+}
+
 function renderPronosticTicket(item) {
   const isCombine = item.type === 'pronostic_combine';
   
@@ -114,6 +140,7 @@ function renderPronosticTicket(item) {
           <div class="confidence">${confidenceDots(item.niveau_confiance)}</div>
         </div>
       </div>
+      ${renderInteractionsBar(item)}
     </div>
   `;
 }
@@ -145,6 +172,7 @@ function renderBilanTicket(item) {
         </div>
         ${resultBadge(item.result_status)}
       </div>
+      ${renderInteractionsBar(item)}
     </div>
   `;
 }
@@ -223,10 +251,84 @@ export async function renderHome(container) {
     feed.innerHTML = renderList(sorted.filter((item) => matchesFilter(item, activeFilter)));
   }
 
-  feed.addEventListener('click', (e) => {
-    const ticketEl = e.target.closest('.ticket');
+  feed.addEventListener('click', async (e) => {
+    const interactionBtn = e.target.closest('.interaction-btn');
+    if (interactionBtn) {
+      e.stopPropagation();
+      const ticketEl = interactionBtn.closest('.ticket');
+      const contentId = ticketEl.dataset.id;
+      const item = allItems.find((i) => i.id === contentId);
+      if (!item) return;
+      
+      const action = interactionBtn.dataset.action;
+      
+      try {
+        if (action === 'like' || action === 'dislike') {
+          const isCurrentlyActive = interactionBtn.classList.contains('active');
+          const newReaction = isCurrentlyActive ? null : action;
+          
+          // Optimistic UI update
+          const oldReaction = item.userState.reaction;
+          item.userState.reaction = newReaction;
+          
+          if (oldReaction === 'like') item.engagement.likes_count = Math.max(0, (item.engagement.likes_count || 1) - 1);
+          if (oldReaction === 'dislike') item.engagement.dislikes_count = Math.max(0, (item.engagement.dislikes_count || 1) - 1);
+          
+          if (newReaction === 'like') item.engagement.likes_count = (item.engagement.likes_count || 0) + 1;
+          if (newReaction === 'dislike') item.engagement.dislikes_count = (item.engagement.dislikes_count || 0) + 1;
+          
+          draw();
+          
+          await api.reactToContent(contentId, newReaction);
+        } 
+        else if (action === 'favorite') {
+          const isFav = !item.userState.is_favorite;
+          
+          // Optimistic UI update
+          item.userState.is_favorite = isFav;
+          if (isFav) item.engagement.favorites_count = (item.engagement.favorites_count || 0) + 1;
+          else item.engagement.favorites_count = Math.max(0, (item.engagement.favorites_count || 1) - 1);
+          
+          draw();
+          
+          await api.toggleFavorite(contentId, isFav);
+        }
+        else if (action === 'share') {
+          const url = `${window.location.origin}/?content=${contentId}`;
+          const title = item.title || item.match_label || 'Pronostic VIP';
+          
+          if (navigator.share) {
+            try {
+              await navigator.share({ title, url });
+              await api.shareContent(contentId, 'native');
+              return;
+            } catch (err) {
+              console.log('Partage annulé ou échoué', err);
+            }
+          }
+          
+          // Fallback copier dans le presse-papier
+          try {
+            await navigator.clipboard.writeText(url);
+            alert('Lien copié dans le presse-papier !');
+            await api.shareContent(contentId, 'clipboard');
+          } catch (err) {
+            alert('Impossible de copier le lien.');
+          }
+        }
+      } catch (err) {
+        console.error('Erreur interaction:', err);
+        // En cas d'erreur (ex: non authentifié), on pourrait rediriger vers le login
+      }
+      return;
+    }
+    
+    // Comportement normal (lightbox) si on clique ailleurs sur le ticket
+    const ticketEl = e.target.closest('.ticket__body--clickable') || e.target.closest('.ticket__image');
     if (!ticketEl) return;
-    const item = allItems.find((i) => i.id === ticketEl.dataset.id);
+    const parentTicket = ticketEl.closest('.ticket');
+    if (!parentTicket) return;
+    const item = allItems.find((i) => i.id === parentTicket.dataset.id);
     if (!item) return;
     openLightbox({
       imageUrl: item.image_url,
@@ -246,11 +348,33 @@ export async function renderHome(container) {
   try {
     const { content } = await api.getContent();
     allItems = (content || []).filter((item) => ['pronostic_unique', 'pronostic_combine', 'bilan'].includes(item.type));
+    
+    // Initialiser les états utilisateur
+    allItems.forEach(item => {
+      item.userState = { reaction: null, is_favorite: false };
+    });
+    
     if (!allItems.length) {
       feed.innerHTML = `<div class="empty-state">Aucun pronostic publié pour le moment.<br>Reviens un peu plus tard 👀</div>`;
       return;
     }
     draw();
+    
+    // Charger les états d'interaction de l'utilisateur (asynchrone)
+    try {
+      const contentIds = allItems.map(i => i.id);
+      const { states } = await api.getInteractionsState(contentIds);
+      if (states) {
+        allItems.forEach(item => {
+          if (states[item.id]) {
+            item.userState = states[item.id];
+          }
+        });
+        draw(); // Redessiner avec les boutons actifs
+      }
+    } catch (err) {
+      console.warn('Impossible de charger les interactions (utilisateur non connecté ?)', err);
+    }
     
     // Charger les stats de manière asynchrone pour ne pas bloquer le feed
     try {

@@ -407,6 +407,55 @@ button {
 .ticket__selection-status.perdu { background: rgba(239, 68, 68, 0.15); color: var(--red); }
 .ticket__selection-status.rembourse { background: rgba(255, 255, 255, 0.1); color: var(--text-muted); }
 
+.ticket__interactions {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 12px 16px;
+  background: rgba(0, 0, 0, 0.2);
+  border-top: 1px dashed rgba(255, 255, 255, 0.05);
+  border-radius: 0 0 16px 16px;
+}
+
+.interaction-btn {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  background: none;
+  border: none;
+  color: var(--text-muted);
+  font-size: 12px;
+  font-weight: 500;
+  cursor: pointer;
+  padding: 6px 10px;
+  border-radius: 20px;
+  transition: all 0.2s ease;
+}
+
+.interaction-btn .icon {
+  font-style: normal;
+  font-size: 14px;
+}
+
+.interaction-btn:hover {
+  background: rgba(255, 255, 255, 0.05);
+  color: var(--text);
+}
+
+.interaction-btn.like-btn.active {
+  color: var(--gold);
+  background: rgba(255, 215, 0, 0.1);
+}
+
+.interaction-btn.dislike-btn.active {
+  color: var(--red);
+  background: rgba(255, 68, 68, 0.1);
+}
+
+.interaction-btn.fav-btn.active {
+  color: var(--gold);
+}
+
 .ticket__cta {
   display: block;
   margin: 0 16px 16px;
