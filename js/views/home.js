@@ -96,7 +96,7 @@ function renderInteractionsBar(item) {
   return `
     <div class="ticket__interactions" data-id="${item.id}">
       <button class="interaction-btn like-btn ${likeClass}" data-action="like">
-        <i class="icon">👍</i> <span>${engagement.likes_count || 'J\\'aime'}</span>
+        <i class="icon">👍</i> <span>${engagement.likes_count || "J'aime"}</span>
       </button>
       <button class="interaction-btn dislike-btn ${dislikeClass}" data-action="dislike">
         <i class="icon">👎</i> <span>${engagement.dislikes_count || ''}</span>
@@ -463,8 +463,8 @@ export async function renderHome(container) {
       const { stats } = await api.getStats();
       if (stats && stats.total > 0) {
         container.querySelector('#stats-container').style.display = 'block';
-        container.querySelector('#stat-winrate').textContent = \`\${stats.winRate}%\`;
-        container.querySelector('#stat-units').textContent = stats.totalUnits > 0 ? \`+\${stats.totalUnits}\` : stats.totalUnits;
+        container.querySelector('#stat-winrate').textContent = `${stats.winRate}%`;
+        container.querySelector('#stat-units').textContent = stats.totalUnits > 0 ? `+${stats.totalUnits}` : stats.totalUnits;
         container.querySelector('#stat-units').style.color = stats.totalUnits > 0 ? 'var(--green)' : (stats.totalUnits < 0 ? 'var(--red)' : 'var(--text)');
         container.querySelector('#stat-cote').textContent = stats.averageCote;
       }
