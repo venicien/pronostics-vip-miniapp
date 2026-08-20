@@ -76,6 +76,44 @@ function navigate(routeKey, root, viewContainer) {
   mountNav(root, routeKey, viewContainer);
 }
 
+function showToast(message, type = 'error') {
+  const existing = document.getElementById('global-toast');
+  if (existing) existing.remove();
+  
+  const toast = document.createElement('div');
+  toast.id = 'global-toast';
+  toast.style.cssText = `
+    position: fixed;
+    top: 16px;
+    left: 50%;
+    transform: translateX(-50%);
+    background: ${type === 'error' ? 'var(--red)' : 'var(--green)'};
+    color: #fff;
+    padding: 10px 16px;
+    border-radius: 8px;
+    font-size: 13px;
+    font-weight: 600;
+    z-index: 9999;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+    max-width: 90%;
+    text-align: center;
+    animation: slideDown 0.3s ease forwards;
+  `;
+  toast.textContent = message;
+  document.body.appendChild(toast);
+  
+  setTimeout(() => {
+    toast.style.animation = 'slideUp 0.3s ease forwards';
+    setTimeout(() => toast.remove(), 300);
+  }, 3000);
+}
+
+// Intercepter les erreurs globales (réseau, promesses non gérées)
+window.addEventListener('unhandledrejection', (event) => {
+  console.error('Unhandled Rejection:', event.reason);
+  showToast(event.reason?.message || "Une erreur inattendue est survenue.");
+});
+
 function boot() {
   initTelegram();
 
