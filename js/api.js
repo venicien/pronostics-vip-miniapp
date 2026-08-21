@@ -54,7 +54,7 @@ export const api = {
   loginWithTelegramWidget: (payload) => request('/api/auth/telegram-login', { method: 'POST', body: payload, auth: false }),
   loginWithCode: (code) => request('/api/auth/code-login', { method: 'POST', body: { code }, auth: false }),
 
-  getContent: (type) => request(`/api/public/content${type ? `?type=${type}` : ''}`, { auth: false }),
+  getContent: (type) => request(`/api/content${type ? `?type=${type}` : ''}`, { auth: false }),
 
   getVipPasses: () => request('/api/payments/vip-passes', { auth: false }),
   submitMobileMoney: (payload) => request('/api/payments/mobile-money', { method: 'POST', body: payload }),
