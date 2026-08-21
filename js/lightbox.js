@@ -21,7 +21,34 @@ function ensureOverlay() {
   return overlay;
 }
 
-export function openLightbox({ imageUrl, title, caption }) {
+// Fonction utilitaire pour parser un markdown basique
+function parseMarkdown(text) {
+  if (!text) return '';
+  let html = text
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
+    .replace(/\*(.*?)\*/g, '<em>$1</em>')
+    .replace(/_(.*?)_/g, '<em>$1</em>')
+    .replace(/__(.*?)__/g, '<strong>$1</strong>')
+    .replace(/\[(.*?)\]\((.*?)\)/g, '<a href="$2" target="_blank" rel="noopener noreferrer">$1</a>')
+    .replace(/\n\n/g, '</p><p>')
+    .replace(/\n/g, '<br>');
+  
+  // Gérer les titres
+  html = html.replace(/^### (.*$)/gim, '<h3>$1</h3>')
+             .replace(/^## (.*$)/gim, '<h2>$1</h2>')
+             .replace(/^# (.*$)/gim, '<h1>$1</h1>');
+             
+  // Gérer les listes à puces
+  html = html.replace(/^\- (.*$)/gim, '<ul><li>$1</li></ul>')
+             .replace(/<\/ul>\n<ul>/g, '\n');
+             
+  return html;
+}
+
+export function openLightbox({ imageUrl, title, caption, isMarkdown }) {
   const el = ensureOverlay();
   const img = el.querySelector('.lightbox__image');
   const cap = el.querySelector('.lightbox__caption');
@@ -32,7 +59,8 @@ export function openLightbox({ imageUrl, title, caption }) {
   } else {
     img.style.display = 'none';
   }
-  cap.innerHTML = `${title ? `<div class="lightbox__title">${title}</div>` : ''}<p>${caption || ''}</p>`;
+  const parsedCaption = isMarkdown ? parseMarkdown(caption) : (caption || '').replace(/\n/g, '<br>');
+  cap.innerHTML = `${title ? `<div class="lightbox__title">${title}</div>` : ''}<div class="lightbox__content" style="margin-top:15px;">${parsedCaption}</div>`;
 
   el.classList.add('open');
   document.body.style.overflow = 'hidden';

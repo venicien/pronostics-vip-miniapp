@@ -243,7 +243,7 @@ function renderArticleTicket(item) {
       <div class="ticket__content">
         <div class="ticket__match">${item.title || 'Article'}</div>
         <div class="ticket__analyse" style="white-space: pre-wrap; font-size: 14px; margin-top: 10px;">${preview}</div>
-        <button class="btn-primary" style="margin-top: 15px; width: 100%; pointer-events: none;">Lire l'article complet</button>
+        <button class="btn-primary interaction-btn" data-action="read-article" style="margin-top: 15px; width: 100%;">Lire l'article complet</button>
       </div>
       ${renderInteractionsBar(item)}
     </div>
@@ -403,6 +403,15 @@ export async function renderHome(container) {
           if (shareOptions) {
             shareOptions.style.display = shareOptions.style.display === 'none' ? 'block' : 'none';
           }
+        }
+        else if (action === 'read-article') {
+          // Utiliser la lightbox pour afficher l'article complet (qui supporte Markdown)
+          openLightbox({
+            imageUrl: item.image_url,
+            title: item.title || 'Article',
+            caption: item.body || '',
+            isMarkdown: true
+          });
         }
         else if (action === 'share-tg' || action === 'share-wa') {
           const url = `${window.location.origin}/?content=${contentId}`;
