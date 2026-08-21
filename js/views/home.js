@@ -162,6 +162,38 @@ function renderPronosticTicket(item) {
   `;
 }
 
+function renderBulletinTicket(item) {
+  const matches = (item.bulletin_matches || []).map((match) => ({
+    competition: match.competition || item.bulletin_competition || '',
+    event_date: match.event_date,
+    team1_name: match.home,
+    team2_name: match.away,
+    team1_logo_url: match.home_logo_url,
+    team2_logo_url: match.away_logo_url,
+    selection_label: `${match.selection_label || ''}${match.score_home != null || match.score_away != null ? ` · ${match.score_home ?? '-'} - ${match.score_away ?? '-'}` : ''}`,
+    cote: null,
+    result_status: match.result_status || 'en_attente',
+  }));
+  return `
+    <div class="ticket" data-id="${item.id}">
+      ${ticketImage(item)}
+      <div class="ticket__body ticket__body--clickable">
+        <div class="ticket__label">
+          <span>📋 Bulletin</span>
+          <span class="ticket__date">${formatPublishedDate(item.published_at)}</span>
+        </div>
+        <div class="ticket__match">${item.title}</div>
+        ${item.bulletin_competition ? `<div style="font-size:12px;color:var(--gold);margin:6px 0;">${item.bulletin_competition}</div>` : ''}
+        <div class="ticket__selections">${matches.map(renderSelection).join('')}</div>
+        ${item.body ? `<p class="ticket__analyse" style="margin-top:12px;">${item.body}</p>` : ''}
+      </div>
+      <div class="ticket__tear"></div>
+      <div class="ticket__stub"><div class="ticket__cote-block"><span class="ticket__cote-label">MATCHS</span><span class="ticket__cote mono">${matches.length}</span></div><span class="ticket__result-badge valide">RÉSULTATS</span></div>
+      ${renderInteractionsBar(item)}
+    </div>
+  `;
+}
+
 function renderBilanTicket(item) {
   const linkedHtml = item.linked_pronostic_id 
     ? `<div style="font-size: 11px; color: var(--gold); margin-top: 8px; display: flex; align-items: center; gap: 4px;">
@@ -198,12 +230,14 @@ const FILTERS = [
   { key: 'all', label: 'Tous' },
   { key: 'pronostic', label: 'Pronostics' },
   { key: 'bilan', label: 'Bilans' },
+  { key: 'bulletin', label: 'Bulletins' },
 ];
 
 function matchesFilter(item, filterKey) {
   if (filterKey === 'all') return true;
   if (filterKey === 'pronostic') return item.type === 'pronostic_unique' || item.type === 'pronostic_combine';
   if (filterKey === 'bilan') return item.type === 'bilan';
+  if (filterKey === 'bulletin') return item.type === 'bulletin';
   return true;
 }
 
@@ -213,7 +247,7 @@ function renderList(items) {
   }
   return items
     .map((item) =>
-      item.type === 'bilan' ? renderBilanTicket(item) : ['pronostic_unique', 'pronostic_combine'].includes(item.type) ? renderPronosticTicket(item) : ''
+      item.type === 'bilan' ? renderBilanTicket(item) : item.type === 'bulletin' ? renderBulletinTicket(item) : ['pronostic_unique', 'pronostic_combine'].includes(item.type) ? renderPronosticTicket(item) : ''
     )
     .join('');
 }
@@ -415,7 +449,7 @@ export async function renderHome(container) {
     openLightbox({
       imageUrl: item.image_url,
       title: item.match_label || item.title,
-      caption: item.type === 'bilan' ? item.body : item.analyse,
+      caption: item.type === 'bilan' || item.type === 'bulletin' ? item.body : item.analyse,
     });
   });
 
@@ -429,7 +463,7 @@ export async function renderHome(container) {
 
   try {
     const { content } = await api.getContent();
-    allItems = (content || []).filter((item) => ['pronostic_unique', 'pronostic_combine', 'bilan'].includes(item.type));
+    allItems = (content || []).filter((item) => ['pronostic_unique', 'pronostic_combine', 'bilan', 'bulletin'].includes(item.type));
     
     // Initialiser les états utilisateur
     allItems.forEach(item => {
