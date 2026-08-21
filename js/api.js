@@ -1,9 +1,9 @@
 // Configure ici l'URL de ton backend Render une fois déployé.
-export const API_BASE_URL = window.__API_BASE_URL__ || 'https://ton-backend.onrender.com';
+export const API_BASE_URL = (typeof window !== 'undefined' && window.__API_BASE_URL__) || 'https://pronostics-vip-backend.onrender.com';
 const SESSION_KEY = 'pvip_session_token';
 
 function getInitData() {
-  return window.Telegram?.WebApp?.initData || '';
+  return typeof window !== 'undefined' ? (window.Telegram?.WebApp?.initData || '') : '';
 }
 
 export function getSessionToken() {

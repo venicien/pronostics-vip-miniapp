@@ -356,7 +356,7 @@ export async function renderHome(container) {
           
           draw();
           
-          await api.reactToContent(contentId, newReaction);
+          await api.toggleReaction(contentId, newReaction);
         } 
         else if (action === 'favorite') {
           const isFav = !item.userState.is_favorite;
@@ -368,7 +368,7 @@ export async function renderHome(container) {
           
           draw();
           
-          await api.toggleFavorite(contentId, isFav);
+          await api.toggleFavorite(contentId);
         }
         else if (action === 'comment') {
           const commentsDiv = ticketEl.querySelector('.ticket__comments');

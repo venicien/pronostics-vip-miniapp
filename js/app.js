@@ -109,10 +109,12 @@ function showToast(message, type = 'error') {
 }
 
 // Intercepter les erreurs globales (réseau, promesses non gérées)
-window.addEventListener('unhandledrejection', (event) => {
-  console.error('Unhandled Rejection:', event.reason);
-  showToast(event.reason?.message || "Une erreur inattendue est survenue.");
-});
+if (typeof window !== 'undefined') {
+  window.addEventListener('unhandledrejection', (event) => {
+    console.error('Unhandled Rejection:', event.reason);
+    showToast(event.reason?.message || "Une erreur inattendue est survenue.");
+  });
+}
 
 function boot() {
   initTelegram();
@@ -129,4 +131,6 @@ function boot() {
   navigate(routes[initialRoute] ? initialRoute : 'home', root, viewContainer);
 }
 
-document.addEventListener('DOMContentLoaded', boot);
+if (typeof document !== 'undefined') {
+  document.addEventListener('DOMContentLoaded', boot);
+}
