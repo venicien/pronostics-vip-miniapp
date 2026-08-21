@@ -1,2 +1,2 @@
-import { renderHome } from './js/views/home.js';
-console.log("Imports succeeded");
+import { api } from './js/api.js';
+console.log("Imports ok");

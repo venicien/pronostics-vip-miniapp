@@ -54,7 +54,7 @@ export const api = {
   loginWithTelegramWidget: (payload) => request('/api/auth/telegram-login', { method: 'POST', body: payload, auth: false }),
   loginWithCode: (code) => request('/api/auth/code-login', { method: 'POST', body: { code }, auth: false }),
 
-  getContent: (type) => request(`/api/content${type ? `?type=${type}` : ''}`, { auth: false }),
+  getContent: (type) => request(`/api/public/content${type ? `?type=${type}` : ''}`, { auth: false }),
 
   getVipPasses: () => request('/api/payments/vip-passes', { auth: false }),
   submitMobileMoney: (payload) => request('/api/payments/mobile-money', { method: 'POST', body: payload }),
@@ -71,12 +71,12 @@ export const api = {
   getStats: () => request('/api/public/stats', { auth: false }),
   getHistory: () => request('/api/public/history?limit=20', { auth: false }),
   
-  getInteractionsState: (contentIds) => request('/api/interactions/state', { method: 'POST', body: { contentIds } }),
-  reactToContent: (contentId, type) => request(`/api/interactions/${contentId}/react`, { method: 'POST', body: { type } }),
-  toggleFavorite: (contentId, is_favorite) => request(`/api/interactions/${contentId}/favorite`, { method: 'POST', body: { is_favorite } }),
-  shareContent: (contentId, channel) => request(`/api/interactions/${contentId}/share`, { method: 'POST', body: { channel } }),
   getFavorites: () => request('/api/interactions/favorites'),
   
   getComments: (contentId) => request(`/api/comments/${contentId}`, { auth: false }),
   postComment: (contentId, body) => request(`/api/comments/${contentId}`, { method: 'POST', body: { body } }),
+  getInteractionsState: (contentIds) => request('/api/interactions/state', { method: 'POST', body: { contentIds } }),
+  toggleReaction: (contentId, reaction) => request(`/api/interactions/${contentId}/react`, { method: 'POST', body: { reaction } }),
+  toggleFavorite: (contentId) => request(`/api/interactions/${contentId}/favorite`, { method: 'POST' }),
+  shareContent: (contentId, channel) => request(`/api/interactions/${contentId}/share`, { method: 'POST', body: { channel } }),
 };
