@@ -424,6 +424,9 @@ export async function renderHome(container) {
           item.engagement.shares_count = (item.engagement.shares_count || 0) + 1;
           draw();
         }
+      } catch (err) {
+        console.warn('Erreur d\'interaction', err);
+      }
       return;
     }
     
