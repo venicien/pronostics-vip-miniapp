@@ -110,6 +110,10 @@ function renderInteractionsBar(item) {
       <button class="interaction-btn share-btn" data-action="share">
         <i class="icon">↗</i> <span>Partager</span>
       </button>
+      <div class="share-options" style="display:none; position:absolute; right:10px; background:var(--bg-card); border:1px solid rgba(255,255,255,0.1); border-radius:8px; padding:5px; z-index:10; box-shadow:0 4px 12px rgba(0,0,0,0.5);">
+        <button class="interaction-btn" data-action="share-tg" style="width:100%; justify-content:flex-start; margin-bottom:4px;"><i class="icon" style="color:#0088cc">✈️</i> Telegram</button>
+        <button class="interaction-btn" data-action="share-wa" style="width:100%; justify-content:flex-start;"><i class="icon" style="color:#25D366">💬</i> WhatsApp</button>
+      </div>
     </div>
     <div class="ticket__comments" id="comments-${item.id}" style="display: none;">
       <div class="comments-list"></div>
@@ -226,11 +230,32 @@ function renderBilanTicket(item) {
   `;
 }
 
+function renderArticleTicket(item) {
+  const date = new Date(item.created_at).toLocaleDateString('fr-FR', { day: 'numeric', month: 'short' });
+  const preview = item.body ? item.body.substring(0, 150) + (item.body.length > 150 ? '...' : '') : '';
+  
+  return `
+    <div class="ticket">
+      <div class="ticket__header">
+        <div class="ticket__type">📝 Article & Guide</div>
+        <div class="ticket__date">${date}</div>
+      </div>
+      <div class="ticket__content">
+        <div class="ticket__match">${item.title || 'Article'}</div>
+        <div class="ticket__analyse" style="white-space: pre-wrap; font-size: 14px; margin-top: 10px;">${preview}</div>
+        <button class="btn-primary" style="margin-top: 15px; width: 100%; pointer-events: none;">Lire l'article complet</button>
+      </div>
+      ${renderInteractionsBar(item)}
+    </div>
+  `;
+}
+
 const FILTERS = [
   { key: 'all', label: 'Tous' },
   { key: 'pronostic', label: 'Pronostics' },
   { key: 'bilan', label: 'Bilans' },
   { key: 'bulletin', label: 'Bulletins' },
+  { key: 'article', label: 'Articles' },
 ];
 
 function matchesFilter(item, filterKey) {
@@ -238,6 +263,7 @@ function matchesFilter(item, filterKey) {
   if (filterKey === 'pronostic') return item.type === 'pronostic_unique' || item.type === 'pronostic_combine';
   if (filterKey === 'bilan') return item.type === 'bilan';
   if (filterKey === 'bulletin') return item.type === 'bulletin';
+  if (filterKey === 'article') return item.type === 'article';
   return true;
 }
 
@@ -247,7 +273,7 @@ function renderList(items) {
   }
   return items
     .map((item) =>
-      item.type === 'bilan' ? renderBilanTicket(item) : item.type === 'bulletin' ? renderBulletinTicket(item) : ['pronostic_unique', 'pronostic_combine'].includes(item.type) ? renderPronosticTicket(item) : ''
+      item.type === 'bilan' ? renderBilanTicket(item) : item.type === 'bulletin' ? renderBulletinTicket(item) : item.type === 'article' ? renderArticleTicket(item) : ['pronostic_unique', 'pronostic_combine'].includes(item.type) ? renderPronosticTicket(item) : ''
     )
     .join('');
 }
@@ -373,32 +399,31 @@ export async function renderHome(container) {
           }
         }
         else if (action === 'share') {
-          const url = `${window.location.origin}/?content=${contentId}`;
-          const title = item.title || item.match_label || 'Pronostic VIP';
-          
-          if (navigator.share) {
-            try {
-              await navigator.share({ title, url });
-              await api.shareContent(contentId, 'native');
-              return;
-            } catch (err) {
-              console.log('Partage annulé ou échoué', err);
-            }
-          }
-          
-          // Fallback copier dans le presse-papier
-          try {
-            await navigator.clipboard.writeText(url);
-            alert('Lien copié dans le presse-papier !');
-            await api.shareContent(contentId, 'clipboard');
-          } catch (err) {
-            alert('Impossible de copier le lien.');
+          const shareOptions = ticketEl.querySelector('.share-options');
+          if (shareOptions) {
+            shareOptions.style.display = shareOptions.style.display === 'none' ? 'block' : 'none';
           }
         }
-      } catch (err) {
-        console.error('Erreur interaction:', err);
-        // En cas d'erreur (ex: non authentifié), on pourrait rediriger vers le login
-      }
+        else if (action === 'share-tg' || action === 'share-wa') {
+          const url = `${window.location.origin}/?content=${contentId}`;
+          const title = item.title || item.match_label || 'Pronostic VIP';
+          const text = `Regarde ce pronostic gagnant sur Pronostics VIP !\n${title}\n\n${url}`;
+          
+          if (action === 'share-tg') {
+            window.open(`https://t.me/share/url?url=${encodeURIComponent(url)}&text=${encodeURIComponent(title)}`, '_blank');
+          } else {
+            window.open(`https://api.whatsapp.com/send?text=${encodeURIComponent(text)}`, '_blank');
+          }
+          
+          const shareOptions = ticketEl.querySelector('.share-options');
+          if (shareOptions) shareOptions.style.display = 'none';
+          
+          await api.shareContent(contentId, action === 'share-tg' ? 'telegram' : 'whatsapp');
+          
+          // Optimistic UI update
+          item.engagement.shares_count = (item.engagement.shares_count || 0) + 1;
+          draw();
+        }
       return;
     }
     
@@ -440,7 +465,7 @@ export async function renderHome(container) {
     }
     
     // Comportement normal (lightbox) si on clique ailleurs sur le ticket
-    const ticketEl = e.target.closest('.ticket__body--clickable') || e.target.closest('.ticket__image');
+    const ticketEl = e.target.closest('.ticket__body--clickable') || e.target.closest('.ticket__image') || e.target.closest('.btn-primary');
     if (!ticketEl) return;
     const parentTicket = ticketEl.closest('.ticket');
     if (!parentTicket) return;
@@ -449,7 +474,7 @@ export async function renderHome(container) {
     openLightbox({
       imageUrl: item.image_url,
       title: item.match_label || item.title,
-      caption: item.type === 'bilan' || item.type === 'bulletin' ? item.body : item.analyse,
+      caption: item.type === 'bilan' || item.type === 'bulletin' || item.type === 'article' ? item.body : item.analyse,
     });
   });
 
@@ -463,7 +488,7 @@ export async function renderHome(container) {
 
   try {
     const { content } = await api.getContent();
-    allItems = (content || []).filter((item) => ['pronostic_unique', 'pronostic_combine', 'bilan', 'bulletin'].includes(item.type));
+    allItems = (content || []).filter((item) => ['pronostic_unique', 'pronostic_combine', 'bilan', 'bulletin', 'article'].includes(item.type));
     
     // Initialiser les états utilisateur
     allItems.forEach(item => {
