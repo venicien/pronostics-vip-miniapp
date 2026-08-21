@@ -235,7 +235,7 @@ function renderArticleTicket(item) {
   const preview = item.body ? item.body.substring(0, 150) + (item.body.length > 150 ? '...' : '') : '';
   
   return `
-    <div class="ticket">
+    <div class="ticket" data-id="${item.id}">
       <div class="ticket__header">
         <div class="ticket__type">📝 Article & Guide</div>
         <div class="ticket__date">${date}</div>
