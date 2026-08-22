@@ -3,7 +3,8 @@ import { api } from '../api.js';
 function bookmakerRowHtml(bm) {
   return `
     <div class="bookmaker-row">
-      <div>
+      <div style="display:flex;align-items:center;gap:12px;">
+        ${bm.logo_url ? `<img src="${bm.logo_url}" alt="${bm.name}" style="width:40px;height:40px;border-radius:8px;object-fit:cover;border:1px solid var(--border);">` : ''}
         <div class="bookmaker-row__name">${bm.name}</div>
       </div>
       <div style="display:flex;align-items:center;gap:10px;">
